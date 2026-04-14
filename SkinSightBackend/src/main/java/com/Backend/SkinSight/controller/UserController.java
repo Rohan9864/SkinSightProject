@@ -57,9 +57,4 @@ public class UserController {
         return ResponseEntity.ok(userService.updateMyProfile(id,dto));
     }
 
-
-
-
-
-
 }

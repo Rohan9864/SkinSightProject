@@ -23,7 +23,7 @@ public class ReportResponseDto {
 
     private String reportUrl;
 
-    private String generatedBy;
+    private String generatedByName;
 
     private String generatedAt;
 

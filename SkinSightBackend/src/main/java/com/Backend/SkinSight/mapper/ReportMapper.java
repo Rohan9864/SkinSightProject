@@ -1,6 +1,8 @@
 package com.Backend.SkinSight.mapper;
 
 import com.Backend.SkinSight.dto.response.ReportResponseDto;
+import com.Backend.SkinSight.entity.DiagnosisResult;
+import com.Backend.SkinSight.entity.DoctorReview;
 import com.Backend.SkinSight.entity.Report;
 import com.Backend.SkinSight.enums.ReviewAction;
 import org.springframework.stereotype.Component;
@@ -13,26 +15,34 @@ public class ReportMapper {
         if (report==null){
             return null;
         }
-        String finalDisease=null;
 
-        if (report.getSkinCase().getDoctorReview()!=null){
-            boolean isOverridden = report.getSkinCase()
-                    .getDoctorReview()
-                    .getAction()== ReviewAction.OVERRIDDEN;
+        DoctorReview doctorReview =report.getSkinCase().getDoctorReview();
 
-            if (isOverridden){
-                finalDisease=report.getSkinCase()
-                        .getDoctorReview()
-                        .getOverriddenClass();
-            }
-            else {
+        DiagnosisResult diagnosisResult=report.getSkinCase().getDiagnosisResult();
 
+        String finalDisease = null;
+        if (doctorReview !=null && diagnosisResult !=null){
+            if (doctorReview.getAction()==ReviewAction.OVERRIDDEN){
+                finalDisease=doctorReview.getOverriddenClass();
+            }else {
+                finalDisease=diagnosisResult.getPredictedClass();
             }
         }
 
+        String severity = null;
+        if (diagnosisResult !=null && diagnosisResult.getSeverityLevel() !=null){
+            severity=diagnosisResult.getSeverityLevel().name();
+        }
 
         return ReportResponseDto.builder()
-                .id()
+                .id(report.getId())
+                .caseId(report.getSkinCase().getId())
+                .patientName(report.getSkinCase().getPatient().getName())
+                .predictedDisease((finalDisease))
+                .severityLevel(severity)
+                .reportUrl(report.getReportUrl())
+                .generatedByName(report.getGeneratedBy().getName())
+                .generatedAt(String.valueOf(report.getGeneratedAt()))
                 .build();
     }
 

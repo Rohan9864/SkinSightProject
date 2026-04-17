@@ -23,7 +23,7 @@ public class ReportServiceImpl implements ReportService{
     @Autowired
     private CaseRepository caseRepository;
     @Autowired
-    private UserRepository userRepository
+    private UserRepository userRepository;
     @Override
     public ReportResponseDto generateReport(Long caseId, Long doctorId) {
         if (reportRepository.existsBySkinCaseId(caseId)){

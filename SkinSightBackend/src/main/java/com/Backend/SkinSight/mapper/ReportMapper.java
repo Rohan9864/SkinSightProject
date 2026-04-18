@@ -42,7 +42,7 @@ public class ReportMapper {
                 .severityLevel(severity)
                 .reportUrl(report.getReportUrl())
                 .generatedByName(report.getGeneratedBy().getName())
-                .generatedAt(String.valueOf(report.getGeneratedAt()))
+                .generatedAt(report.getGeneratedAt())
                 .build();
     }
 

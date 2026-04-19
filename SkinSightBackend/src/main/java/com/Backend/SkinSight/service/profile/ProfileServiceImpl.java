@@ -10,6 +10,7 @@ import com.Backend.SkinSight.mapper.DoctorProfileMapper;
 import com.Backend.SkinSight.mapper.PatientProfileMapper;
 import com.Backend.SkinSight.repository.DoctorProfileRepository;
 import com.Backend.SkinSight.repository.PatientProfileRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +18,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class ProfileServiceImpl implements ProfileService{
     @Autowired
     private DoctorProfileRepository doctorProfileRepository;

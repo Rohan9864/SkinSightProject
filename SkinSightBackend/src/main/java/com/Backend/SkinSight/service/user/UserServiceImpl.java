@@ -6,6 +6,7 @@ import com.Backend.SkinSight.entity.User;
 import com.Backend.SkinSight.enums.Role;
 import com.Backend.SkinSight.mapper.UserMapper;
 import com.Backend.SkinSight.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +14,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class UserServiceImpl implements UserService{
     @Autowired
     private UserRepository userRepository;

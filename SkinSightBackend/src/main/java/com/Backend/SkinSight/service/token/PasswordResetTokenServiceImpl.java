@@ -32,7 +32,7 @@ public class PasswordResetTokenServiceImpl implements PasswordResetTokenService{
     @Override
     public void createTokenAndSendMail(String email) {
 
-        User user=userRepository.findBYEmail(email).orElseThrow(()->
+        User user=userRepository.findByEmail(email).orElseThrow(()->
                 new RuntimeException("No account found with "
                         + "email: " + email));
         tokenRepository.findByUserId(user.getId()).ifPresent(existing->{

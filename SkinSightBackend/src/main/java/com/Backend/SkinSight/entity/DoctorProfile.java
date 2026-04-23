@@ -28,7 +28,7 @@ public class DoctorProfile {
 
     private String phone;
 
-    private String HospitalAffiliation;
+    private String hospitalAffiliation;
 
     private Integer yearsOfExperience;
 

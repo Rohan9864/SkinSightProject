@@ -4,6 +4,7 @@ import com.Backend.SkinSight.dto.request.UpdateUserRequestDto;
 import com.Backend.SkinSight.dto.response.UserResponseDto;
 import com.Backend.SkinSight.entity.User;
 import com.Backend.SkinSight.enums.Role;
+import com.Backend.SkinSight.exception.ResourceNotFoundException;
 import com.Backend.SkinSight.mapper.UserMapper;
 import com.Backend.SkinSight.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -41,14 +42,14 @@ public class UserServiceImpl implements UserService{
     @Override
     public UserResponseDto getUserById(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(()->
-                new RuntimeException("User not found with id: "+ userId));
+                new ResourceNotFoundException("User not found with id: "+ userId));
         return userMapper.toDto(user);
     }
 
     @Override
     public void toggleAccountStatus(Long userId) {
         User user = userRepository.findById(userId).orElseThrow(()->
-                new RuntimeException("User not found with id: "+userId));
+                new ResourceNotFoundException("User not found with id: "+userId));
 
         user.setActive(!user.isActive());
         userRepository.save(user);
@@ -57,14 +58,14 @@ public class UserServiceImpl implements UserService{
     @Override
     public UserResponseDto getMyProfile(Long userId) {
         User user= userRepository.findById(userId).orElseThrow(()->
-                new RuntimeException("User not found with id: "+userId));
+                new ResourceNotFoundException("User not found with id: "+userId));
         return null;
     }
 
     @Override
     public UserResponseDto updateMyProfile(Long userId, UpdateUserRequestDto dto) {
         User user= userRepository.findById(userId).orElseThrow(()->
-                new RuntimeException("User not found with id: "+userId));
+                new ResourceNotFoundException("User not found with id: "+userId));
 
         if (dto.getName()!=null && !dto.getName().isBlank()){
             user.setName(dto.getName());

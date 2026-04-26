@@ -7,6 +7,8 @@ import com.Backend.SkinSight.entity.DoctorProfile;
 import com.Backend.SkinSight.entity.PatientProfile;
 import com.Backend.SkinSight.entity.User;
 import com.Backend.SkinSight.enums.Role;
+import com.Backend.SkinSight.exception.ConflictException;
+import com.Backend.SkinSight.exception.UnauthorizedException;
 import com.Backend.SkinSight.mapper.UserMapper;
 import com.Backend.SkinSight.repository.DoctorProfileRepository;
 import com.Backend.SkinSight.repository.PatientProfileRepository;
@@ -58,7 +60,7 @@ public class AuthServiceImpl implements AuthService{
     @Override
     public void register(RegisterRequestDto dto) {
         if (userRepository.existsByEmail(dto.getEmail())){
-            throw new RuntimeException("An account with this email already exists.");
+            throw new ConflictException("An account with this email already exists.");
         }
 
         User user= User.builder()
@@ -97,12 +99,12 @@ public class AuthServiceImpl implements AuthService{
         }
 
         if (!user.isEmailVerified()){
-            throw new RuntimeException("Please verify your email address "
+            throw new UnauthorizedException("Please verify your email address "
                     + "before logging in. Check your inbox.");
         }
 
         if (!user.isActive()){
-            throw new RuntimeException(
+            throw new UnauthorizedException(
                     "Your account has been deactivated. "
                             + "Please contact the administrator.");
         }
@@ -140,11 +142,11 @@ public class AuthServiceImpl implements AuthService{
     @Override
     public UserResponseDto createDoctor(CreateDoctorRequestDto dto) {
         if (userRepository.existsByEmail(dto.getEmail())){
-            throw new RuntimeException( "An account with this email already exists.");
+            throw new ConflictException( "An account with this email already exists.");
         }
 
         if (doctorProfileRepository.existsByLicenseNumber(dto.getLicenseNumber())){
-            throw new RuntimeException("A doctor with this license number "
+            throw new ConflictException("A doctor with this license number "
                     + "already exists.");
         }
 

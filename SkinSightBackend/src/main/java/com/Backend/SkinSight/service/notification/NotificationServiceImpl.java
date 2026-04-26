@@ -5,6 +5,7 @@ import com.Backend.SkinSight.entity.Case;
 import com.Backend.SkinSight.entity.Notification;
 import com.Backend.SkinSight.entity.User;
 import com.Backend.SkinSight.enums.NotificationType;
+import com.Backend.SkinSight.exception.ResourceNotFoundException;
 import com.Backend.SkinSight.mapper.NotificationMapper;
 import com.Backend.SkinSight.repository.CaseRepository;
 import com.Backend.SkinSight.repository.NotificationRepository;
@@ -33,7 +34,7 @@ public class NotificationServiceImpl implements NotificationService{
     @Override
     public void sendNotification(Long recipientId, NotificationType type, String message, Long relatedCaseId) {
         User recipient=userRepository.findById(recipientId).orElseThrow(()->
-                new RuntimeException("Recipient not found: " + recipientId));
+                new ResourceNotFoundException("Recipient not found: " + recipientId));
 
         Case relatedCase = caseRepository.findById(relatedCaseId).orElse(null);
 
@@ -79,7 +80,7 @@ public class NotificationServiceImpl implements NotificationService{
     public void markAsRead(Long notificationId) {
 
         Notification notification = notificationRepository.findById(notificationId).orElseThrow(() ->
-                new RuntimeException("Notification not found: " + notificationId));
+                new ResourceNotFoundException("Notification not found: " + notificationId));
 
         notification.setRead(true);
 

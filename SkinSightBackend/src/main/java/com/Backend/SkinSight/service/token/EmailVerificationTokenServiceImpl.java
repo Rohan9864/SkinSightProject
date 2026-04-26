@@ -2,6 +2,7 @@ package com.Backend.SkinSight.service.token;
 
 import com.Backend.SkinSight.entity.EmailVerificationToken;
 import com.Backend.SkinSight.entity.User;
+import com.Backend.SkinSight.exception.BadRequestException;
 import com.Backend.SkinSight.repository.EmailVerificationTokenRepository;
 import com.Backend.SkinSight.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -43,19 +44,19 @@ public class EmailVerificationTokenServiceImpl implements EmailVerificationToken
     @Override
     public void verifyToken(String tokenValue) {
         EmailVerificationToken tokenEntity = tokenRepository.findByToken(tokenValue).orElseThrow(()->
-                new RuntimeException( "Invalid verification link."
+                new BadRequestException( "Invalid verification link."
                         + " Please request "
                         + "a new one."));
 
         if (tokenEntity.isUsed()){
-            throw new RuntimeException(
+            throw new BadRequestException(
                     "This verification link has already "
                             + "been used. Please log in.");
         }
 
         if (tokenEntity.getExpiresAt()
                 .isBefore(LocalDateTime.now())){
-            throw new RuntimeException( "This verification link has expired."
+            throw new BadRequestException( "This verification link has expired."
                     + " Please request a new one.");
         }
 

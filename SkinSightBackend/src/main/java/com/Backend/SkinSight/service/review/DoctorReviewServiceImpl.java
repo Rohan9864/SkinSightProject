@@ -8,6 +8,8 @@ import com.Backend.SkinSight.entity.DoctorReview;
 import com.Backend.SkinSight.entity.User;
 import com.Backend.SkinSight.enums.CaseStatus;
 import com.Backend.SkinSight.enums.ReviewAction;
+import com.Backend.SkinSight.exception.BadRequestException;
+import com.Backend.SkinSight.exception.ResourceNotFoundException;
 import com.Backend.SkinSight.mapper.DoctorReviewMapper;
 import com.Backend.SkinSight.repository.CaseRepository;
 import com.Backend.SkinSight.repository.DoctorReviewRepository;
@@ -37,30 +39,30 @@ public class DoctorReviewServiceImpl implements DoctorReviewService{
                                                 Long caseId,
                                                 DoctorReviewRequestDto dto) {
         Case skinCase = caseRepository.findById(caseId).orElseThrow(()->
-                new RuntimeException("Case not found with id: " + caseId));
+                new ResourceNotFoundException("Case not found with id: " + caseId));
 
         if (skinCase.getStatus()!= CaseStatus.UNDER_REVIEW){
-            throw new RuntimeException( "Case is not available for review. " +
+            throw new BadRequestException( "Case is not available for review. " +
                     "Current status: " + skinCase.getStatus());
         }
 
         User doctor = userRepository.findById(doctorId).orElseThrow(()->
-                new RuntimeException("Doctor not found"));
+                new ResourceNotFoundException("Doctor not found"));
 
         if (dto.getAction()== ReviewAction.OVERRIDDEN){
             if (dto.getOverriddenClass()==null || dto.getOverriddenClass().isBlank()){
-                throw new RuntimeException("Overridden class is required" +
+                throw new BadRequestException("Overridden class is required" +
                         "when action is OVERRIDDEN");
             }
             if (dto.getOverriddenReason()==null || dto.getOverriddenReason().isBlank()){
-                throw new RuntimeException("Override Reason is required" +
+                throw new BadRequestException("Override Reason is required" +
                         "When Action is OVERRIDDEN");
             }
         }
 
         if (dto.getAction()!=ReviewAction.RESUBMISSION_REQUESTED &&
                 (dto.getClinicalNotes()==null || dto.getClinicalNotes().isBlank())){
-            throw new RuntimeException("Clinical notes are required" +
+            throw new BadRequestException("Clinical notes are required" +
                     "when confirming or overriding a diagnosis");
         }
 
@@ -95,7 +97,7 @@ public class DoctorReviewServiceImpl implements DoctorReviewService{
     @Override
     public DoctorReviewResponseDto getReviewByCaseId(Long caseId) {
         DoctorReview review = doctorReviewRepository.findBySkinCaseId(caseId).orElseThrow(()->
-                new RuntimeException("Review not found for case: " + caseId));
+                new ResourceNotFoundException("Review not found for case: " + caseId));
         return doctorReviewMapper.toDto(review);
     }
 

@@ -2,6 +2,8 @@ package com.Backend.SkinSight.service.token;
 
 import com.Backend.SkinSight.entity.PasswordResetToken;
 import com.Backend.SkinSight.entity.User;
+import com.Backend.SkinSight.exception.BadRequestException;
+import com.Backend.SkinSight.exception.ResourceNotFoundException;
 import com.Backend.SkinSight.repository.PasswordResetTokenRepository;
 import com.Backend.SkinSight.repository.UserRepository;
 import com.Backend.SkinSight.service.EmailService;
@@ -33,7 +35,7 @@ public class PasswordResetTokenServiceImpl implements PasswordResetTokenService{
     public void createTokenAndSendMail(String email) {
 
         User user=userRepository.findByEmail(email).orElseThrow(()->
-                new RuntimeException("No account found with "
+                new ResourceNotFoundException("No account found with "
                         + "email: " + email));
         tokenRepository.findByUserId(user.getId()).ifPresent(existing->{
             tokenRepository.delete(existing);
@@ -59,16 +61,16 @@ public class PasswordResetTokenServiceImpl implements PasswordResetTokenService{
     public void resetPassword(String tokenValue, String newPassword) {
 
         PasswordResetToken tokenEntity = tokenRepository.findByToken(tokenValue).orElseThrow(()->
-                new RuntimeException("Invalid reset link."
+                new BadRequestException("Invalid reset link."
                         + " Please request "
                         + "a new one."));
         if (tokenEntity.isUsed()){
-            throw new RuntimeException( "This reset link has already been used."
+            throw new BadRequestException( "This reset link has already been used."
                     + " Please request a new one.");
         }
 
         if (tokenEntity.getExpiresAt().isBefore(LocalDateTime.now())){
-            throw new RuntimeException("This reset link has expired."
+            throw new BadRequestException("This reset link has expired."
                     + " Please request a new one.");
         }
         User user =tokenEntity.getUser();

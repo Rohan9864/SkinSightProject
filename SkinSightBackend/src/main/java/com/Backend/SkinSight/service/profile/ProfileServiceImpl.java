@@ -6,6 +6,7 @@ import com.Backend.SkinSight.dto.response.DoctorProfileResponseDto;
 import com.Backend.SkinSight.dto.response.PatientProfileResponseDto;
 import com.Backend.SkinSight.entity.DoctorProfile;
 import com.Backend.SkinSight.entity.PatientProfile;
+import com.Backend.SkinSight.exception.ResourceNotFoundException;
 import com.Backend.SkinSight.mapper.DoctorProfileMapper;
 import com.Backend.SkinSight.mapper.PatientProfileMapper;
 import com.Backend.SkinSight.repository.DoctorProfileRepository;
@@ -39,7 +40,7 @@ public class ProfileServiceImpl implements ProfileService{
     public PatientProfileResponseDto updatePatientProfile(
             Long userId, UpdatePatientProfileRequestDto dto) {
         PatientProfile profile = patientProfileRepository.findByUserId(userId).orElseThrow(()->
-                new RuntimeException("Patient profile not found for user: " + userId));
+                new ResourceNotFoundException("Patient profile not found for user: " + userId));
         if (dto.getAge()!=null){
             profile.setAge(dto.getAge());
         }
@@ -68,7 +69,7 @@ public class ProfileServiceImpl implements ProfileService{
     @Override
     public DoctorProfileResponseDto getDoctorProfile(Long userId) {
         DoctorProfile profile = doctorProfileRepository.findByUserId(userId).orElseThrow(()->
-                new RuntimeException("Doctor profile not found for user: "+ userId));
+                new ResourceNotFoundException("Doctor profile not found for user: "+ userId));
         return doctorProfileMapper.toDto(profile);
     }
 
@@ -76,7 +77,7 @@ public class ProfileServiceImpl implements ProfileService{
     public DoctorProfileResponseDto updateDoctorProfile(
             Long userId, UpdateDoctorProfileRequestDto dto) {
         DoctorProfile profile = doctorProfileRepository.findByUserId(userId).orElseThrow(()->
-                new RuntimeException("Doctor profile not found for user: "+ userId));
+                new ResourceNotFoundException("Doctor profile not found for user: "+ userId));
         if (dto.getSpecialization() != null
                 && !dto.getSpecialization().isBlank()) {
             profile.setSpecialization(dto.getSpecialization());

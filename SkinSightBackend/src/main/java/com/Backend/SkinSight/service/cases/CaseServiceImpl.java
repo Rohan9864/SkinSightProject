@@ -6,6 +6,8 @@ import com.Backend.SkinSight.entity.Case;
 import com.Backend.SkinSight.entity.User;
 import com.Backend.SkinSight.enums.CaseStatus;
 import com.Backend.SkinSight.enums.Role;
+import com.Backend.SkinSight.exception.BadRequestException;
+import com.Backend.SkinSight.exception.ResourceNotFoundException;
 import com.Backend.SkinSight.mapper.CaseMapper;
 import com.Backend.SkinSight.repository.CaseRepository;
 import com.Backend.SkinSight.repository.UserRepository;
@@ -30,7 +32,7 @@ public class CaseServiceImpl implements CaseService{
     @Override
     public CaseResponseDto createCase(Long patientId, CreateCaseRequestDto dto) {
         User patient = userRepository.findById(patientId).orElseThrow(()->
-                new RuntimeException("Patient not found"));
+                new ResourceNotFoundException("Patient not found"));
 
         Case newCase = Case.builder()
                 .patient(patient)
@@ -49,7 +51,7 @@ public class CaseServiceImpl implements CaseService{
     @Override
     public CaseResponseDto getCaseById(Long caseId) {
         Case skinCase = caseRepository.findById(caseId).orElseThrow(()->
-                new RuntimeException("Case not found with id: " + caseId));
+                new ResourceNotFoundException("Case not found with id: " + caseId));
         return caseMapper.toDto(skinCase);
     }
 
@@ -81,8 +83,8 @@ public class CaseServiceImpl implements CaseService{
     @Override
     public void updateCaseStatus(Long caseId, String status) {
 
-        Case skinCase = caseRepository.findById(caseId).orElseThrow(()
-                -> new RuntimeException("Case not found with id: " + caseId));
+        Case skinCase = caseRepository.findById(caseId).orElseThrow(() ->
+                new ResourceNotFoundException("Case not found with id: " + caseId));
 
         skinCase.setStatus(CaseStatus.valueOf(status));
         caseRepository.save(skinCase);
@@ -92,24 +94,24 @@ public class CaseServiceImpl implements CaseService{
     @Override
     public CaseResponseDto assignCaseToDoctor(Long caseId, Long doctorId) {
         Case skinCase = caseRepository.findById(caseId).orElseThrow(()->
-                new RuntimeException("Case not found with id: " + caseId));
+                new ResourceNotFoundException("Case not found with id: " + caseId));
 
         if (skinCase.getStatus()!=CaseStatus.PENDING){
-            throw new RuntimeException( "Only PENDING cases can be assigned. " +
+            throw new BadRequestException( "Only PENDING cases can be assigned. " +
                     "Current status: " + skinCase.getStatus());
         }
 
         User doctor = userRepository.findById(doctorId).orElseThrow(()->
-                new RuntimeException("Doctor not found with id: " + doctorId));
+                new ResourceNotFoundException("Doctor not found with id: " + doctorId));
 
         if (doctor.getRole()!= Role.DOCTOR){
-            throw new RuntimeException(
+            throw new BadRequestException(
                     "User with id " + doctorId +
                             " is not a doctor");
         }
 
         if (!doctor.isActive()){
-            throw new RuntimeException(
+            throw new BadRequestException(
                     "Cannot assign case to an inactive doctor");
         }
 

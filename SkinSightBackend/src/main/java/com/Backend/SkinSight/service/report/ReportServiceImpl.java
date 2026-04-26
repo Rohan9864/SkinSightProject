@@ -5,6 +5,9 @@ import com.Backend.SkinSight.entity.Case;
 import com.Backend.SkinSight.entity.Report;
 import com.Backend.SkinSight.entity.User;
 import com.Backend.SkinSight.enums.CaseStatus;
+import com.Backend.SkinSight.exception.BadRequestException;
+import com.Backend.SkinSight.exception.ConflictException;
+import com.Backend.SkinSight.exception.ResourceNotFoundException;
 import com.Backend.SkinSight.mapper.ReportMapper;
 import com.Backend.SkinSight.repository.CaseRepository;
 import com.Backend.SkinSight.repository.ReportRepository;
@@ -27,21 +30,21 @@ public class ReportServiceImpl implements ReportService{
     @Override
     public ReportResponseDto generateReport(Long caseId, Long doctorId) {
         if (reportRepository.existsBySkinCaseId(caseId)){
-            throw new RuntimeException( "Report already exists for case: " + caseId);
+            throw new ConflictException( "Report already exists for case: " + caseId);
         }
 
         Case skinCase = caseRepository.findById(caseId).orElseThrow(()->
-                new RuntimeException( "Case not found: " + caseId));
+                new ResourceNotFoundException( "Case not found: " + caseId));
 
         if (skinCase.getStatus()!= CaseStatus.RELEASED){
-            throw new RuntimeException(
+            throw new BadRequestException(
                     "Report can only be generated for" +
                     "RELEASED cases. Current Status :"+
                     skinCase.getStatus());
         }
 
         User doctor = userRepository.findById(doctorId).orElseThrow(()->
-                new RuntimeException( "Doctor not found: " + doctorId));
+                new ResourceNotFoundException( "Doctor not found: " + doctorId));
 
         String reportUrl = buildPdfAndSave(skinCase);
 
@@ -59,7 +62,7 @@ public class ReportServiceImpl implements ReportService{
     @Override
     public ReportResponseDto getReportByCase(Long caseId) {
         Report report = reportRepository.findBySkinCaseId(caseId).orElseThrow(()->
-                new RuntimeException("Report not found for case: " + caseId));
+                new ResourceNotFoundException("Report not found for case: " + caseId));
 
         return reportMapper.toDto(report);
     }
@@ -68,7 +71,7 @@ public class ReportServiceImpl implements ReportService{
     public ReportResponseDto getReportById(Long reportId) {
 
         Report report = reportRepository.findById(reportId).orElseThrow(()->
-                new RuntimeException("Report not found: " + reportId));
+                new ResourceNotFoundException("Report not found: " + reportId));
 
         return reportMapper.toDto(report);
 

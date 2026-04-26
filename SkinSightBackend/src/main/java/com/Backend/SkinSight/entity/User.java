@@ -60,8 +60,8 @@ public class User {
     @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL,fetch = FetchType.LAZY)
     private List<Case> cases;
 
-//    @OneToMany(mappedBy = "recipient",cascade = CascadeType.ALL,fetch = FetchType.LAZY)
-//    private List<Notification> notifications;
+    @OneToMany(mappedBy = "recipient",cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+    private List<Notification> notifications;
 
 
 }

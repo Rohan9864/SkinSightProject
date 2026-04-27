@@ -11,13 +11,16 @@ import com.Backend.SkinSight.exception.ResourceNotFoundException;
 import com.Backend.SkinSight.mapper.CaseMapper;
 import com.Backend.SkinSight.repository.CaseRepository;
 import com.Backend.SkinSight.repository.UserRepository;
+import com.Backend.SkinSight.service.diagnosis.DiagnosisResultService;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @Transactional
 public class CaseServiceImpl implements CaseService{
@@ -29,6 +32,10 @@ public class CaseServiceImpl implements CaseService{
 
     @Autowired
     private CaseMapper caseMapper;
+
+    @Autowired
+    private DiagnosisResultService diagnosisResultService;
+
     @Override
     public CaseResponseDto createCase(Long patientId, CreateCaseRequestDto dto) {
         User patient = userRepository.findById(patientId).orElseThrow(()->
@@ -44,6 +51,15 @@ public class CaseServiceImpl implements CaseService{
                 .build();
 
         Case savedCase = caseRepository.save(newCase);
+
+        try {
+            diagnosisResultService.processAndSaveResult(savedCase.getId());
+        }catch (Exception e){
+            log.error(
+                    "ML processing failed for case {}: {}",
+                    savedCase.getId(),
+                    e.getMessage());
+        }
 
         return caseMapper.toDto(savedCase);
     }

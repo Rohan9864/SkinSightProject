@@ -7,6 +7,7 @@ import com.Backend.SkinSight.entity.Case;
 import com.Backend.SkinSight.entity.DoctorReview;
 import com.Backend.SkinSight.entity.User;
 import com.Backend.SkinSight.enums.CaseStatus;
+import com.Backend.SkinSight.enums.NotificationType;
 import com.Backend.SkinSight.enums.ReviewAction;
 import com.Backend.SkinSight.exception.BadRequestException;
 import com.Backend.SkinSight.exception.ResourceNotFoundException;
@@ -14,7 +15,10 @@ import com.Backend.SkinSight.mapper.DoctorReviewMapper;
 import com.Backend.SkinSight.repository.CaseRepository;
 import com.Backend.SkinSight.repository.DoctorReviewRepository;
 import com.Backend.SkinSight.repository.UserRepository;
+import com.Backend.SkinSight.service.EmailService;
+import com.Backend.SkinSight.service.notification.NotificationService;
 import jakarta.transaction.Transactional;
+import jakarta.validation.constraints.Email;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -34,6 +38,12 @@ public class DoctorReviewServiceImpl implements DoctorReviewService{
     private UserRepository userRepository;
     @Autowired
     private DoctorReviewMapper doctorReviewMapper;
+    @Autowired
+    private NotificationService notificationService;
+    @Autowired
+    EmailService emailService;
+
+
     @Override
     public DoctorReviewResponseDto submitReview(Long doctorId,
                                                 Long caseId,
@@ -91,6 +101,37 @@ public class DoctorReviewServiceImpl implements DoctorReviewService{
 
         DoctorReview savedReview= doctorReviewRepository.save(review);
 
+        User patient = skinCase.getPatient();
+
+        if (dto.getAction() == ReviewAction.CONFIRMED
+        || dto.getAction()==ReviewAction.OVERRIDDEN){
+            notificationService.sendNotification(
+                    patient.getId(),
+                    NotificationType.RESULT_READY,
+                    "Your diagnosis result for Case #"
+                            + caseId + " is now available. "
+                            + "Log in to view your result.",
+                    caseId);
+            emailService.sendResultReadyEmail(
+                    patient.getEmail(),
+                    patient.getName(),
+                    caseId);
+            
+        } else if (dto.getAction()==ReviewAction.RESUBMISSION_REQUESTED) {
+            notificationService.sendNotification(
+                    patient.getId(),
+                    NotificationType.RESUBMISSION_REQUIRED,
+                    "The doctor has reviewed Case #"
+                            + caseId + " and requires a new image. "
+                            + "Please check the doctor's note.",
+                    caseId);
+            emailService.sendResubmissionEmail(
+                    patient.getEmail(),
+                    patient.getName(),
+                    caseId,
+                    dto.getClinicalNotes());
+            
+        }
         return doctorReviewMapper.toDto(savedReview);
     }
 

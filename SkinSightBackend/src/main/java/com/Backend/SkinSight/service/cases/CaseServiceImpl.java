@@ -2,6 +2,7 @@ package com.Backend.SkinSight.service.cases;
 
 import com.Backend.SkinSight.dto.request.CreateCaseRequestDto;
 import com.Backend.SkinSight.dto.response.CaseResponseDto;
+import com.Backend.SkinSight.dto.response.FileUploadResponseDto;
 import com.Backend.SkinSight.entity.Case;
 import com.Backend.SkinSight.entity.User;
 import com.Backend.SkinSight.enums.CaseStatus;
@@ -12,10 +13,12 @@ import com.Backend.SkinSight.mapper.CaseMapper;
 import com.Backend.SkinSight.repository.CaseRepository;
 import com.Backend.SkinSight.repository.UserRepository;
 import com.Backend.SkinSight.service.diagnosis.DiagnosisResultService;
+import com.Backend.SkinSight.service.file.FileStorageService;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -36,32 +39,46 @@ public class CaseServiceImpl implements CaseService{
     @Autowired
     private DiagnosisResultService diagnosisResultService;
 
+    @Autowired
+    private FileStorageService fileStorageService;
+
     @Override
-    public CaseResponseDto createCase(Long patientId, CreateCaseRequestDto dto) {
+    public CaseResponseDto createCase(Long patientId, MultipartFile image, CreateCaseRequestDto dto) {
         User patient = userRepository.findById(patientId).orElseThrow(()->
-                new ResourceNotFoundException("Patient not found"));
+                new ResourceNotFoundException("Patient not found : "+ patientId));
 
-        Case newCase = Case.builder()
-                .patient(patient)
-                .imageUrl(dto.getImageUrl())
-                .bodyArea(dto.getBodyArea())
-                .description(dto.getDescription())
-                .duration(dto.getDuration())
-                .status(CaseStatus.PENDING)
-                .build();
+        FileUploadResponseDto uploadedFile = fileStorageService.storeCaseImage(image,null);
 
-        Case savedCase = caseRepository.save(newCase);
+        Case newCase;
+        try{
+            newCase = Case.builder()
+                    .patient(patient)
+                    .imageUrl(uploadedFile.getFilePath())
+                    .bodyArea(dto != null
+                            ? dto.getBodyArea() : null)
+                    .description(dto != null
+                            ? dto.getDescription() : null)
+                    .duration(dto != null
+                            ? dto.getDuration() : null)
+                    .status(CaseStatus.PENDING)
+                    .build();
+
+            newCase = caseRepository.save(newCase);
+        } catch (Exception e){
+            fileStorageService.deleteFile(uploadedFile.getFilePath());
+            throw e;
+        }
 
         try {
-            diagnosisResultService.processAndSaveResult(savedCase.getId());
+            diagnosisResultService.processAndSaveResult(newCase.getId());
         }catch (Exception e){
             log.error(
                     "ML processing failed for case {}: {}",
-                    savedCase.getId(),
+                    newCase.getId(),
                     e.getMessage());
         }
 
-        return caseMapper.toDto(savedCase);
+        return caseMapper.toDto(newCase);
     }
 
     @Override

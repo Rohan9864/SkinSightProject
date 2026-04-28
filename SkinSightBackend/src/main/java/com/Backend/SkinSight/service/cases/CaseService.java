@@ -2,11 +2,12 @@ package com.Backend.SkinSight.service.cases;
 
 import com.Backend.SkinSight.dto.request.CreateCaseRequestDto;
 import com.Backend.SkinSight.dto.response.CaseResponseDto;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
 public interface CaseService {
-    CaseResponseDto createCase(Long patientId, CreateCaseRequestDto dto);
+    CaseResponseDto createCase(Long patientId, MultipartFile image, CreateCaseRequestDto dto);
 
     CaseResponseDto getCaseById(Long caseId);
 

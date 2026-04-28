@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -22,12 +23,14 @@ public class CaseController {
     @Autowired
     private CaseService caseService;
 
-    @PostMapping
+    @PostMapping(consumes = {"multipart/form-data"})
     @PreAuthorize("hasRole('PATIENT')")
     public ResponseEntity<CaseResponseDto> createCase(
             @RequestAttribute("userId") Long patientId,
+            @RequestPart("image") MultipartFile image,
+            @RequestPart(value = "data",required = false)
             @Valid @RequestBody CreateCaseRequestDto dto){
-        CaseResponseDto response = caseService.createCase(patientId,dto);
+        CaseResponseDto response = caseService.createCase(patientId,image,dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 

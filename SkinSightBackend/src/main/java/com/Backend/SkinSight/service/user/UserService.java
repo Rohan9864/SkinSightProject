@@ -2,7 +2,6 @@ package com.Backend.SkinSight.service.user;
 
 import com.Backend.SkinSight.dto.request.UpdateUserRequestDto;
 import com.Backend.SkinSight.dto.response.UserResponseDto;
-import com.Backend.SkinSight.entity.User;
 
 import java.util.List;
 
@@ -13,7 +12,7 @@ public interface UserService {
 
     UserResponseDto getUserById(Long userId);
 
-    void toggleAccountStatus(Long userId);
+    void toggleAccountStatus(Long adminId, Long userId);
 
     UserResponseDto getMyProfile(Long userId);
 

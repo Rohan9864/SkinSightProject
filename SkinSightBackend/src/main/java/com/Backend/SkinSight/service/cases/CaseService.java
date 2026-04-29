@@ -19,7 +19,7 @@ public interface CaseService {
 
     void updateCaseStatus(Long caseId, String status);
 
-    CaseResponseDto assignCaseToDoctor(Long caseId, Long doctorId);
+    CaseResponseDto assignCaseToDoctor(Long adminId ,Long caseId, Long doctorId);
 
     List<CaseResponseDto> getMyAssignedCases(Long doctorId);
 

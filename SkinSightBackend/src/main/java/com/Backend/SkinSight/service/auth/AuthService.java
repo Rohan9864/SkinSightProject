@@ -15,7 +15,7 @@ public interface AuthService {
 
     void resetPassword(NewPasswordRequestDto dto);
 
-    UserResponseDto  createDoctor(CreateDoctorRequestDto dto);
+    UserResponseDto  createDoctor(Long adminId, CreateDoctorRequestDto dto);
 
 
 

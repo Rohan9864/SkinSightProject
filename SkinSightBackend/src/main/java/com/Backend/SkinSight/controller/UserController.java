@@ -40,9 +40,13 @@ public class UserController {
 
     @PatchMapping("/{id}/toggle-status")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<String> toggleStatus(@PathVariable Long id){
-        userService.toggleAccountStatus(id);
-        return ResponseEntity.ok("Account status updated successfully");
+    public ResponseEntity<String> toggleStatus(
+            @RequestAttribute("userId") Long adminId,
+            @PathVariable Long id) {
+
+        userService.toggleAccountStatus(adminId, id);
+        return ResponseEntity.ok(
+                "Account status updated successfully");
     }
 
     @GetMapping("/me")

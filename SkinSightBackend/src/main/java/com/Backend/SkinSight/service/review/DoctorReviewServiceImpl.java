@@ -6,6 +6,7 @@ import com.Backend.SkinSight.dto.response.DoctorReviewResponseDto;
 import com.Backend.SkinSight.entity.Case;
 import com.Backend.SkinSight.entity.DoctorReview;
 import com.Backend.SkinSight.entity.User;
+import com.Backend.SkinSight.enums.AuditAction;
 import com.Backend.SkinSight.enums.CaseStatus;
 import com.Backend.SkinSight.enums.NotificationType;
 import com.Backend.SkinSight.enums.ReviewAction;
@@ -16,6 +17,7 @@ import com.Backend.SkinSight.repository.CaseRepository;
 import com.Backend.SkinSight.repository.DoctorReviewRepository;
 import com.Backend.SkinSight.repository.UserRepository;
 import com.Backend.SkinSight.service.EmailService;
+import com.Backend.SkinSight.service.audit.AuditLogService;
 import com.Backend.SkinSight.service.notification.NotificationService;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.Email;
@@ -43,6 +45,8 @@ public class DoctorReviewServiceImpl implements DoctorReviewService{
     @Autowired
     EmailService emailService;
 
+    @Autowired
+    private AuditLogService auditLogService;
 
     @Override
     public DoctorReviewResponseDto submitReview(Long doctorId,
@@ -101,6 +105,38 @@ public class DoctorReviewServiceImpl implements DoctorReviewService{
 
         DoctorReview savedReview= doctorReviewRepository.save(review);
 
+        AuditAction auditAction;
+        if (dto.getAction()==ReviewAction.CONFIRMED){
+            auditAction = AuditAction.CASE_RESULT_CONFIRMED;
+        } else if (dto.getAction()==ReviewAction.OVERRIDDEN) {
+            auditAction=AuditAction.CASE_RESULT_OVERRIDDEN;
+        }else {
+            auditAction=AuditAction.CASE_RESUBMISSION_REQUESTED;
+        }
+
+        String auditDetails = buildReviewAuditDetail(dto,skinCase,doctor);
+
+        auditLogService.log(
+                doctorId,
+                auditAction,
+                "Case",
+                caseId,
+                auditDetails
+        );
+
+        if (dto.getAction()==ReviewAction.CONFIRMED ||
+                dto.getAction()==ReviewAction.OVERRIDDEN){
+            auditLogService.log(
+                    doctorId,
+                    AuditAction.CASE_RESULT_RELEASED,
+                    "Case",
+                    caseId,
+                    "Result released to patient: "
+                    + skinCase.getPatient().getName());
+
+        }
+
+
         User patient = skinCase.getPatient();
 
         if (dto.getAction() == ReviewAction.CONFIRMED
@@ -133,6 +169,27 @@ public class DoctorReviewServiceImpl implements DoctorReviewService{
             
         }
         return doctorReviewMapper.toDto(savedReview);
+    }
+
+    private String buildReviewAuditDetail(DoctorReviewRequestDto dto, Case skinCase, User doctor) {
+        StringBuilder details = new StringBuilder();
+        details.append("Doctor :")
+                .append(doctor.getName())
+                .append(" | Patient :")
+                .append(skinCase.getPatient().getName())
+                .append(" | action :")
+                .append(dto.getAction().name());
+
+        if (dto.getAction()==ReviewAction.OVERRIDDEN){
+            details.append(" | AI predicted: ")
+                    .append(skinCase.getDiagnosisResult().getPredictedClass())
+                    .append(" → Doctor overrode to: ")
+                    .append(dto.getOverriddenClass())
+                    .append(" | Reason: ")
+                    .append(dto.getOverriddenReason());
+        }
+
+        return details.toString();
     }
 
     @Override

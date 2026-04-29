@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -63,10 +64,13 @@ public class AuthController {
                 + "your new password.");
     }
 
+    @PostMapping("/create-doctor")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserResponseDto> createDoctor(
+            @RequestAttribute("userId") Long adminId,
             @Valid @RequestBody CreateDoctorRequestDto dto){
 
-        UserResponseDto response = authService.createDoctor(dto);
+        UserResponseDto response = authService.createDoctor(adminId,dto);
 
        return ResponseEntity
                 .status(HttpStatus.CREATED)

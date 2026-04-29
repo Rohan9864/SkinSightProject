@@ -5,6 +5,7 @@ import com.Backend.SkinSight.dto.response.CaseResponseDto;
 import com.Backend.SkinSight.dto.response.FileUploadResponseDto;
 import com.Backend.SkinSight.entity.Case;
 import com.Backend.SkinSight.entity.User;
+import com.Backend.SkinSight.enums.AuditAction;
 import com.Backend.SkinSight.enums.CaseStatus;
 import com.Backend.SkinSight.enums.Role;
 import com.Backend.SkinSight.exception.BadRequestException;
@@ -12,6 +13,7 @@ import com.Backend.SkinSight.exception.ResourceNotFoundException;
 import com.Backend.SkinSight.mapper.CaseMapper;
 import com.Backend.SkinSight.repository.CaseRepository;
 import com.Backend.SkinSight.repository.UserRepository;
+import com.Backend.SkinSight.service.audit.AuditLogService;
 import com.Backend.SkinSight.service.diagnosis.DiagnosisResultService;
 import com.Backend.SkinSight.service.file.FileStorageService;
 import jakarta.transaction.Transactional;
@@ -41,6 +43,9 @@ public class CaseServiceImpl implements CaseService{
 
     @Autowired
     private FileStorageService fileStorageService;
+
+    @Autowired
+    private AuditLogService auditLogService;
 
     @Override
     public CaseResponseDto createCase(Long patientId, MultipartFile image, CreateCaseRequestDto dto) {
@@ -125,7 +130,7 @@ public class CaseServiceImpl implements CaseService{
     }
 
     @Override
-    public CaseResponseDto assignCaseToDoctor(Long caseId, Long doctorId) {
+    public CaseResponseDto assignCaseToDoctor(Long adminId,Long caseId, Long doctorId) {
         Case skinCase = caseRepository.findById(caseId).orElseThrow(()->
                 new ResourceNotFoundException("Case not found with id: " + caseId));
 
@@ -151,6 +156,16 @@ public class CaseServiceImpl implements CaseService{
         skinCase.setAssignedDoctor(doctor);
         skinCase.setStatus(CaseStatus.UNDER_REVIEW);
         caseRepository.save(skinCase);
+
+        auditLogService.log(
+                adminId,
+                AuditAction.CASE_ASSIGNED_TO_DOCTOR,
+                "Case",
+                caseId,
+                "Case # " + caseId
+                + " assigned to Dr. "+ doctor.getName()
+                + "( ID : " + doctorId + ")");
+
         return caseMapper.toDto(skinCase);
     }
 

@@ -63,9 +63,10 @@ public class CaseController {
     @PatchMapping("/{id}/assign")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CaseResponseDto> assignCase(
+            @RequestAttribute("userId") Long adminId,
             @PathVariable Long id,
             @Valid @RequestBody AssignCaseRequestDto dto){
-        CaseResponseDto response = caseService.assignCaseToDoctor(id,dto.getDoctorId());
+        CaseResponseDto response = caseService.assignCaseToDoctor(adminId,id,dto.getDoctorId());
         return ResponseEntity.ok(response);
     }
 

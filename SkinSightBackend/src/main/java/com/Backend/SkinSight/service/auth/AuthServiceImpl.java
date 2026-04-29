@@ -6,6 +6,7 @@ import com.Backend.SkinSight.dto.response.UserResponseDto;
 import com.Backend.SkinSight.entity.DoctorProfile;
 import com.Backend.SkinSight.entity.PatientProfile;
 import com.Backend.SkinSight.entity.User;
+import com.Backend.SkinSight.enums.AuditAction;
 import com.Backend.SkinSight.enums.Role;
 import com.Backend.SkinSight.exception.ConflictException;
 import com.Backend.SkinSight.exception.UnauthorizedException;
@@ -15,6 +16,7 @@ import com.Backend.SkinSight.repository.PatientProfileRepository;
 import com.Backend.SkinSight.repository.UserRepository;
 import com.Backend.SkinSight.security.JwtUtil;
 import com.Backend.SkinSight.service.EmailService;
+import com.Backend.SkinSight.service.audit.AuditLogService;
 import com.Backend.SkinSight.service.token.EmailVerificationTokenService;
 import com.Backend.SkinSight.service.token.PasswordResetTokenService;
 import jakarta.transaction.Transactional;
@@ -55,6 +57,9 @@ public class AuthServiceImpl implements AuthService{
 
     @Autowired
     private PasswordResetTokenService passwordResetTokenService;
+
+    @Autowired
+    private AuditLogService auditLogService;
 
 
     @Override
@@ -140,7 +145,7 @@ public class AuthServiceImpl implements AuthService{
     }
 
     @Override
-    public UserResponseDto createDoctor(CreateDoctorRequestDto dto) {
+    public UserResponseDto createDoctor(Long adminId, CreateDoctorRequestDto dto) {
         if (userRepository.existsByEmail(dto.getEmail())){
             throw new ConflictException( "An account with this email already exists.");
         }
@@ -180,6 +185,18 @@ public class AuthServiceImpl implements AuthService{
                 user.getEmail(),
                 user.getPassword(),
                 tempPassword);
+
+        auditLogService.log(
+                adminId,
+                AuditAction.DOCTOR_ACCOUNT_CREATED,
+                "User",
+                user.getId(),
+                "Doctor account created for: "
+                + user.getName()
+                + " (" + dto.getEmail() + ")"
+                +  dto.getSpecialization()
+                +" | License: "
+                +dto.getLicenseNumber());
 
         return userMapper.toDto(user);
     }

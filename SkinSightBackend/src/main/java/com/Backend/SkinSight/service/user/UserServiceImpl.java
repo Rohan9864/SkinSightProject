@@ -3,10 +3,12 @@ package com.Backend.SkinSight.service.user;
 import com.Backend.SkinSight.dto.request.UpdateUserRequestDto;
 import com.Backend.SkinSight.dto.response.UserResponseDto;
 import com.Backend.SkinSight.entity.User;
+import com.Backend.SkinSight.enums.AuditAction;
 import com.Backend.SkinSight.enums.Role;
 import com.Backend.SkinSight.exception.ResourceNotFoundException;
 import com.Backend.SkinSight.mapper.UserMapper;
 import com.Backend.SkinSight.repository.UserRepository;
+import com.Backend.SkinSight.service.audit.AuditLogService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,6 +24,10 @@ public class UserServiceImpl implements UserService{
 
     @Autowired
     private UserMapper userMapper;
+
+    @Autowired
+    private AuditLogService auditLogService;
+
     @Override
     public List<UserResponseDto> getAllDoctors() {
         List<User> doctors = userRepository.findByRole(Role.DOCTOR);
@@ -47,12 +53,25 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
-    public void toggleAccountStatus(Long userId) {
+    public void toggleAccountStatus(Long adminId, Long userId) {
         User user = userRepository.findById(userId).orElseThrow(()->
                 new ResourceNotFoundException("User not found with id: "+userId));
 
         user.setActive(!user.isActive());
         userRepository.save(user);
+
+        auditLogService.log(
+                adminId,
+                user.isActive()
+                ? AuditAction.USER_ACCOUNT_ACTIVATED :AuditAction.USER_ACCOUNT_DEACTIVATED,
+                "User",
+                userId,
+                "Account"
+                + (user.isActive() ? "Activated":"Deactivated")
+                + " for user: " + user.getName()
+                +" (" + user.getEmail() + ")"
+                        + " | Role: " + user.getRole().name());
+
     }
 
     @Override

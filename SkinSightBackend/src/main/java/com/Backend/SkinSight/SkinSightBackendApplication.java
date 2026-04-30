@@ -10,4 +10,6 @@ public class SkinSightBackendApplication {
 		SpringApplication.run(SkinSightBackendApplication.class, args);
 	}
 
+
+
 }

@@ -1,0 +1,3 @@
+SKINSIGHT_DB_PASSWORD=your_mysql_password_here
+SKINSIGHT_JWT_SECRET=your_super_long_secret_key_here_at_least_32_chars
+SKINSIGHT_MAIL_PASSWORD=your_gmail_app_password_here

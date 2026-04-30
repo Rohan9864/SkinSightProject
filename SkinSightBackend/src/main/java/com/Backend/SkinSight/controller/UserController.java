@@ -56,6 +56,8 @@ public class UserController {
         return ResponseEntity.ok(userService.getMyProfile(id));
     }
 
+    @PutMapping("/me")
+    @PreAuthorize("hasAnyRole('PATIENT', 'DOCTOR', 'ADMIN')")
     public ResponseEntity<UserResponseDto> updateMyProfile(@RequestAttribute("userId") Long id,
                                                            @Valid @RequestBody UpdateUserRequestDto dto){
         return ResponseEntity.ok(userService.updateMyProfile(id,dto));

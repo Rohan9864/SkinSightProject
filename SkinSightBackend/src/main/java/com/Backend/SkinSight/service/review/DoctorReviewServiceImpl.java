@@ -19,10 +19,10 @@ import com.Backend.SkinSight.repository.UserRepository;
 import com.Backend.SkinSight.service.EmailService;
 import com.Backend.SkinSight.service.audit.AuditLogService;
 import com.Backend.SkinSight.service.notification.NotificationService;
-import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.Email;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;

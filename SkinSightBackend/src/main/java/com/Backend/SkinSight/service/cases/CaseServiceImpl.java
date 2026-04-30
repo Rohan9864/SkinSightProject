@@ -16,10 +16,10 @@ import com.Backend.SkinSight.repository.UserRepository;
 import com.Backend.SkinSight.service.audit.AuditLogService;
 import com.Backend.SkinSight.service.diagnosis.DiagnosisResultService;
 import com.Backend.SkinSight.service.file.FileStorageService;
-import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -52,7 +52,7 @@ public class CaseServiceImpl implements CaseService{
         User patient = userRepository.findById(patientId).orElseThrow(()->
                 new ResourceNotFoundException("Patient not found : "+ patientId));
 
-        FileUploadResponseDto uploadedFile = fileStorageService.storeCaseImage(image,null);
+        FileUploadResponseDto uploadedFile = fileStorageService.storeCaseImage(image,patientId);
 
         Case newCase;
         try{
@@ -74,12 +74,17 @@ public class CaseServiceImpl implements CaseService{
             throw e;
         }
 
+        final Long caseId= newCase.getId();
         try {
-            diagnosisResultService.processAndSaveResult(newCase.getId());
+            diagnosisResultService.processAndSaveResult(caseId);
+            log.info(
+                    "ML processing completed for case: {}",
+                    caseId);
         }catch (Exception e){
-            log.error(
-                    "ML processing failed for case {}: {}",
-                    newCase.getId(),
+            log.warn(
+                    "ML processing skipped for case {} "
+                            + "— Django service unavailable: {}",
+                    caseId,
                     e.getMessage());
         }
 
@@ -163,7 +168,7 @@ public class CaseServiceImpl implements CaseService{
                 "Case",
                 caseId,
                 "Case # " + caseId
-                + " assigned to Dr. "+ doctor.getName()
+                + " assigned to "+ doctor.getName()
                 + "( ID : " + doctorId + ")");
 
         return caseMapper.toDto(skinCase);

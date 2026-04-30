@@ -125,17 +125,15 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponseDto> handleGenericException(
+    public ResponseEntity<ErrorResponseDto>
+    handleGenericException(
             Exception ex,
-            HttpServletRequest request){
+            HttpServletRequest request) {
         ex.printStackTrace();
 
         return buildError(
                 HttpStatus.INTERNAL_SERVER_ERROR,
-                "An unexpected error occurred. "
-                        + "Please try again later.",
-                request
-        );
+                "Internal error: " + ex.getMessage(), request);
     }
 
 

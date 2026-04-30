@@ -19,11 +19,11 @@ import com.Backend.SkinSight.service.EmailService;
 import com.Backend.SkinSight.service.audit.AuditLogService;
 import com.Backend.SkinSight.service.token.EmailVerificationTokenService;
 import com.Backend.SkinSight.service.token.PasswordResetTokenService;
-import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
@@ -183,7 +183,7 @@ public class AuthServiceImpl implements AuthService{
         doctorProfileRepository.save(profile);
         emailService.sendDoctorCredentials(
                 user.getEmail(),
-                user.getPassword(),
+                user.getName(),
                 tempPassword);
 
         auditLogService.log(
@@ -193,7 +193,7 @@ public class AuthServiceImpl implements AuthService{
                 user.getId(),
                 "Doctor account created for: "
                 + user.getName()
-                + " (" + dto.getEmail() + ")"
+                + " (" + dto.getEmail() + ") "
                 +  dto.getSpecialization()
                 +" | License: "
                 +dto.getLicenseNumber());

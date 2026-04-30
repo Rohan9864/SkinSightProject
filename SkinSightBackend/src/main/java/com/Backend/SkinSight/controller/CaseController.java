@@ -28,8 +28,18 @@ public class CaseController {
     public ResponseEntity<CaseResponseDto> createCase(
             @RequestAttribute("userId") Long patientId,
             @RequestPart("image") MultipartFile image,
-            @RequestPart(value = "data",required = false)
-            @Valid @RequestBody CreateCaseRequestDto dto){
+            @RequestParam(value = "bodyArea",required = false)
+            String bodyArea,
+            @RequestParam(value = "description", required = false)
+            String description,
+            @RequestParam(value = "duration", required = false)
+            String duration){
+
+        CreateCaseRequestDto dto = new CreateCaseRequestDto();
+        dto.setBodyArea(bodyArea);
+        dto.setDescription(description);
+        dto.setDuration(duration);
+
         CaseResponseDto response = caseService.createCase(patientId,image,dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }

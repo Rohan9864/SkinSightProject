@@ -5,9 +5,9 @@ import com.Backend.SkinSight.entity.User;
 import com.Backend.SkinSight.exception.BadRequestException;
 import com.Backend.SkinSight.repository.EmailVerificationTokenRepository;
 import com.Backend.SkinSight.repository.UserRepository;
-import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.UUID;

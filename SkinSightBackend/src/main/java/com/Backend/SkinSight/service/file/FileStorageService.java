@@ -6,7 +6,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 public interface FileStorageService {
 
-    FileUploadResponseDto storeCaseImage(MultipartFile file,Long caseId);
+    FileUploadResponseDto storeCaseImage(MultipartFile file,Long patientId);
 
     void deleteFile(String filePath);
 

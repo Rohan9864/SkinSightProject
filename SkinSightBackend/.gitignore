@@ -31,3 +31,15 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# ── Secret files — never push these ──────────────────────────
+application-local.properties
+.env
+.env.local
+
+# ── Upload directory ──────────────────────────────────────────
+uploads/
+
+# ── OS files ──────────────────────────────────────────────────
+.DS_Store
+Thumbs.db

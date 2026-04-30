@@ -11,9 +11,9 @@ import com.Backend.SkinSight.mapper.DoctorProfileMapper;
 import com.Backend.SkinSight.mapper.PatientProfileMapper;
 import com.Backend.SkinSight.repository.DoctorProfileRepository;
 import com.Backend.SkinSight.repository.PatientProfileRepository;
-import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;

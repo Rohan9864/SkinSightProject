@@ -7,10 +7,10 @@ import com.Backend.SkinSight.exception.ResourceNotFoundException;
 import com.Backend.SkinSight.repository.PasswordResetTokenRepository;
 import com.Backend.SkinSight.repository.UserRepository;
 import com.Backend.SkinSight.service.EmailService;
-import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.UUID;

@@ -19,9 +19,14 @@ import com.Backend.SkinSight.repository.UserRepository;
 import com.Backend.SkinSight.service.notification.NotificationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 
 @Slf4j
+@Service
 public class DiagnosisResultServiceImpl implements DiagnosisResultService{
 
     @Autowired
@@ -43,6 +48,7 @@ public class DiagnosisResultServiceImpl implements DiagnosisResultService{
     private UserRepository userRepository;
 
     @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public DiagnosisResultResponseDto processAndSaveResult(Long caseId) {
 
         Case skinCase = caseRepository.findById(caseId).orElseThrow(()->
@@ -92,19 +98,18 @@ public class DiagnosisResultServiceImpl implements DiagnosisResultService{
 
         DiagnosisResult savedResult = diagnosisResultRepository.save(diagnosisResult);
 
+        skinCase.setStatus(CaseStatus.UNDER_REVIEW);
+        caseRepository.save(skinCase);
+
+        notifyAdmin(caseId);
+
         log.info( "Saved diagnosis result for case {}. "
                         + "Predicted: {}, Severity: {}",
                 caseId,
                 mlResult.getPredictedClass(),
                 severityLevel);
 
-        skinCase.setStatus(CaseStatus.UNDER_REVIEW);
-        caseRepository.save(skinCase);
-
-        notifyAdmin(caseId);
-
         return diagnosisResultMapper.toDto(savedResult);
-
 
     }
 
@@ -122,6 +127,7 @@ public class DiagnosisResultServiceImpl implements DiagnosisResultService{
     }
 
     @Override
+    @Transactional(readOnly = true)
     public DiagnosisResultResponseDto getResultByCase(Long caseId) {
 
         DiagnosisResult result = diagnosisResultRepository.findBySkinCaseId(caseId).orElseThrow(()->

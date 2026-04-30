@@ -9,9 +9,9 @@ import com.Backend.SkinSight.exception.ResourceNotFoundException;
 import com.Backend.SkinSight.mapper.UserMapper;
 import com.Backend.SkinSight.repository.UserRepository;
 import com.Backend.SkinSight.service.audit.AuditLogService;
-import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -78,7 +78,7 @@ public class UserServiceImpl implements UserService{
     public UserResponseDto getMyProfile(Long userId) {
         User user= userRepository.findById(userId).orElseThrow(()->
                 new ResourceNotFoundException("User not found with id: "+userId));
-        return null;
+        return userMapper.toDto(user);
     }
 
     @Override

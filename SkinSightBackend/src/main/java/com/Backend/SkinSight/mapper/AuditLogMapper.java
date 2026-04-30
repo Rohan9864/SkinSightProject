@@ -14,6 +14,7 @@ public class AuditLogMapper {
 
         return AuditLogResponseDto.builder()
                 .id(log.getId())
+                .performedByName(log.getPerformedBy().getName())
                 .performedById(log.getPerformedBy().getId())
                 .performedByRole(log.getPerformedBy().getRole().name())
                 .action(log.getAction().name())

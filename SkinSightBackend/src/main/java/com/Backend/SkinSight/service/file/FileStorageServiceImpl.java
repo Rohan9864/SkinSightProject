@@ -32,7 +32,7 @@ public class FileStorageServiceImpl implements FileStorageService{
                     "image/png");
 
     @Override
-    public FileUploadResponseDto storeCaseImage(MultipartFile file, Long caseId) {
+    public FileUploadResponseDto storeCaseImage(MultipartFile file, Long patientId) {
 
         if (file == null || file.isEmpty()){
             throw new BadRequestException( "Please select an image file to upload.");
@@ -51,11 +51,11 @@ public class FileStorageServiceImpl implements FileStorageService{
 
         String fileExtension = getFileExtension(originalFileName);
 
-        String uniqueFileName= "case_"
-                + caseId
+        String uniqueFileName = "patient_"
+                + (patientId != null ? patientId : "unknown")
                 + "_"
-                +System.currentTimeMillis()
-                +fileExtension;
+                + System.currentTimeMillis()
+                + fileExtension;
 
         Path targetLocation = Paths
                 .get(caseUploadDir)
@@ -66,11 +66,10 @@ public class FileStorageServiceImpl implements FileStorageService{
                     targetLocation,
                     StandardCopyOption.REPLACE_EXISTING);
 
-            log.info(
-                    "Saved Image for case {} : {}",
-                    caseId,targetLocation);
+            log.info("Saved image: {}", targetLocation);
+
         }catch (IOException e){
-            log.error("Failed to save image for case {} : {}", caseId,e.getMessage());
+            log.error("Failed to save image : {}",e.getMessage());
             throw new BadRequestException(
                     "Failed to save the uploaded image. "
                             + "Please try again.");

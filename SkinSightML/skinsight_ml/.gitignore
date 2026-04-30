@@ -1,0 +1,32 @@
+# Virtual environment
+venv/
+
+# Environment secrets
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.py[cod]
+
+# Django
+*.log
+db.sqlite3
+
+# Model weights — too large for GitHub
+models/*.pth
+models/*.pt
+
+# Uploaded files
+uploads/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.iml

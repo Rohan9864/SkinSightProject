@@ -1,0 +1,89 @@
+# ══════════════════════════════════════════════════════════════
+# PYTHON / DJANGO (SkinSightML)
+# ══════════════════════════════════════════════════════════════
+
+# Virtual environment
+SkinSightML/venv/
+SkinSightML/env/
+SkinSightML/.venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyo
+*.pyd
+
+# Django specific
+SkinSightML/skinsight_ml/db.sqlite3
+SkinSightML/skinsight_ml/*.log
+
+# ML model weights — too large for GitHub
+SkinSightML/skinsight_ml/models/*.pth
+SkinSightML/skinsight_ml/models/*.pt
+SkinSightML/skinsight_ml/models/*.h5
+
+# Django secrets
+SkinSightML/skinsight_ml/.env
+
+# ══════════════════════════════════════════════════════════════
+# UPLOADS — created at runtime by both Spring Boot and Django
+# Lives at project root level not inside any subfolder
+# ══════════════════════════════════════════════════════════════
+uploads/
+# This single line covers the uploads/ folder
+# wherever it gets created at the root level.
+# Spring Boot creates: uploads/cases/ uploads/heatmaps/ uploads/reports/
+# Django reads from:   uploads/cases/
+# Django writes to:    uploads/heatmaps/
+# Neither should be pushed — they are runtime files.
+
+# ══════════════════════════════════════════════════════════════
+# JAVA / SPRING BOOT (SkinSightBackend)
+# ══════════════════════════════════════════════════════════════
+
+# Maven build output
+SkinSightBackend/target/
+
+# Spring Boot secrets
+SkinSightBackend/src/main/resources/application-local.properties
+
+# Spring Boot logs
+SkinSightBackend/*.log
+SkinSightBackend/logs/
+
+# ══════════════════════════════════════════════════════════════
+# IDE FILES
+# ══════════════════════════════════════════════════════════════
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+.vscode/
+*.code-workspace
+.project
+.classpath
+.settings/
+.factorypath
+
+# ══════════════════════════════════════════════════════════════
+# OS FILES
+# ══════════════════════════════════════════════════════════════
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ══════════════════════════════════════════════════════════════
+# ENVIRONMENT FILES
+# ══════════════════════════════════════════════════════════════
+.env
+.env.local
+.env.production
+.env.development
+.env.test

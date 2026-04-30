@@ -125,24 +125,20 @@ REST_FRAMEWORK = {
 }
 
 # ── File paths ────────────────────────────────────────────────
-UPLOAD_DIR = os.path.join(BASE_DIR, 'uploads')
-# Base uploads directory shared with Spring Boot.
-# Spring Boot saves images here.
-# Django reads images from here.
+
+PROJECT_ROOT = BASE_DIR.parent.parent
+
+
+UPLOAD_DIR = os.path.join(PROJECT_ROOT, 'uploads')
 
 CASES_DIR = os.path.join(UPLOAD_DIR, 'cases')
-# Where Spring Boot saves patient images.
-# e.g. uploads/cases/patient_1_1704067200000.jpg
+
 
 HEATMAPS_DIR = os.path.join(UPLOAD_DIR, 'heatmaps')
-# Where Django saves Grad-CAM heatmap images.
-# e.g. uploads/heatmaps/case_1_heatmap.jpg
+
 
 MODEL_PATH = os.path.join(
     BASE_DIR, 'models', 'resnet50_skinsight.pth')
-# Path to trained ResNet-50 weights.
-# This file is generated after training on ISIC 2019.
-# Added to .gitignore because it is too large for GitHub.
 
 # ── Internationalization ──────────────────────────────────────
 LANGUAGE_CODE = 'en-us'

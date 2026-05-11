@@ -1,7 +1,6 @@
-# api/ml/classifier.py
-
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import timm
 from django.conf import settings
 import json
@@ -17,8 +16,9 @@ DISEASE_CLASSES = [
     'Vascular Lesion',
     'Squamous Cell Carcinoma'
 ]
-# Order matches ISIC 2019 training:
+# Order matches ISIC 2019 training column order:
 # MEL=0, NV=1, BCC=2, AK=3, BKL=4, DF=5, VASC=6, SCC=7
+# If this order is wrong, all predictions will be mislabeled.
 
 NUM_CLASSES = len(DISEASE_CLASSES)
 # = 8
@@ -26,26 +26,74 @@ NUM_CLASSES = len(DISEASE_CLASSES)
 # ── Global model variable ─────────────────────────────────────
 MODEL  = None
 DEVICE = torch.device('cpu')
-# CPU inference for Django server.
-# ConvNeXt-Base inference on CPU: ~2-4 seconds per image.
-# Acceptable for this system.
+# CPU inference on Django server.
+# ConvNeXt-Base at 384×384 on CPU: ~3-6 seconds per image.
+# Acceptable latency for this medical review system.
+
+
+# ── GeM Pooling ───────────────────────────────────────────────
+class GeM(nn.Module):
+    """
+    Generalized Mean Pooling.
+
+    More powerful than average pooling for fine-grained
+    recognition tasks like skin disease classification.
+
+    Formula: ( mean( x^p ) ) ^ (1/p)
+
+    When p=1: equivalent to average pooling.
+    When p→∞: equivalent to max pooling.
+    Learned p≈2.80 — between average and max pooling.
+
+    The p parameter is LEARNED during training.
+    The saved value (≈2.80) must be loaded from
+    the .pth file, not hardcoded.
+    """
+
+    def __init__(self, p=3, eps=1e-6):
+        super().__init__()
+        self.p   = nn.Parameter(torch.ones(1) * p)
+        # p is a learnable parameter.
+        # Initialized to 3.0, converged to ≈2.80.
+        # Saved in state dict as key '1.0.p'.
+        # MUST be loaded from .pth file.
+
+        self.eps = eps
+        # Small epsilon prevents log(0) errors
+        # when clamping negative activations.
+
+    def forward(self, x):
+        return F.adaptive_avg_pool2d(
+            x.clamp(min=self.eps).pow(self.p),
+            output_size=1
+        ).pow(1.0 / self.p)
+        # Step 1: clamp removes negatives (min=eps)
+        # Step 2: raise each element to power p
+        # Step 3: average pool to (1,1)
+        # Step 4: take p-th root
+        # Result shape: (B, 1024, 1, 1)
 
 
 def build_model():
     """
-    Reconstructs the exact ConvNeXt-Base architecture
+    Reconstructs exact ConvNeXt-Base architecture
     used during training.
 
-    Architecture confirmed from model file inspection:
-    - Backbone: ConvNeXt-Base via timm
-      (output: 1024 channels, 7×7 spatial for 224×224 input)
-    - Head: AdaptiveAvgPool2d → Flatten →
-            BatchNorm1d(1024) → Linear(1024→512) →
-            GELU → Dropout(0.5) → Linear(512→8)
-    - Wrapped as nn.Sequential([backbone, head])
+    Verified: loads with zero missing/unexpected keys.
+
+    Architecture:
+        backbone  = ConvNeXt-Base (timm, no head)
+        head[0]   = GeM(p=3, learnable)
+        head[1]   = Flatten
+        head[2]   = BatchNorm1d(1024, momentum=0.01)
+        head[3]   = Linear(1024 → 512)
+        head[4]   = SiLU
+        head[5]   = Dropout(p=0.5)
+        head[6]   = Linear(512 → 8)
+        model     = nn.Sequential(backbone, head)
 
     Returns:
-        torch.nn.Module: Full ConvNeXt-Base model.
+        torch.nn.Module: Full ConvNeXt-Base + GeM model.
     """
     # Build ConvNeXt-Base backbone
     backbone = timm.create_model(
@@ -53,50 +101,52 @@ def build_model():
         pretrained=False,
         num_classes=0,
         global_pool='')
-    # num_classes=0 removes timm's default head.
-    # global_pool='' disables timm's pooling.
-    # Output shape: (B, 1024, 7, 7) for 224×224 input.
-    # We apply our own pooling in the head below.
+    # pretrained=False — we load our own weights.
+    # num_classes=0 — removes timm's default head.
+    # global_pool='' — disables timm's pooling.
+    # Output: (B, 1024, 12, 12) for 384×384 input.
 
     # Build custom classifier head
     head = nn.Sequential(
-        nn.AdaptiveAvgPool2d(1),
-        # (B, 1024, 7, 7) → (B, 1024, 1, 1)
-        # Global average pooling collapses spatial dims.
+        GeM(p=3),
+        # index 0: GeM pooling
+        # (B, 1024, 12, 12) → (B, 1024, 1, 1)
+        # p is learned — loaded from state dict key '1.0.p'
+        # Trained value: ≈2.80
 
         nn.Flatten(),
+        # index 1: flatten spatial dims
         # (B, 1024, 1, 1) → (B, 1024)
 
-        nn.BatchNorm1d(1024),
-        # Normalizes the 1024 feature vector.
-        # Stabilizes training and acts as regularization.
-        # Has learnable weight and bias (saved in .pth).
+        nn.BatchNorm1d(1024, momentum=0.01),
+        # index 2: normalize feature vector
+        # momentum=0.01 is slower than default 0.1
+        # More stable statistics for medical imaging
+        # Weights loaded from keys '1.2.*'
 
         nn.Linear(1024, 512),
-        # Intermediate feature compression.
-        # Learns disease-specific feature combinations.
+        # index 3: feature compression
+        # Weights loaded from keys '1.3.*'
 
-        nn.GELU(),
-        # GELU activation — smooth non-linearity.
-        # Better than ReLU for transformer-based models
-        # like ConvNeXt which inherit transformer design.
+        nn.SiLU(),
+        # index 4: Swish activation (no parameters)
+        # Same activation used inside ConvNeXt blocks.
+        # Smoother gradient than ReLU.
 
         nn.Dropout(p=0.5),
-        # 50% dropout during training.
+        # index 5: 50% dropout (no parameters)
         # Disabled automatically in eval() mode.
-        # No parameters saved — just the p value.
 
         nn.Linear(512, NUM_CLASSES),
-        # Final classification: 512 → 8 classes.
-        # Has learnable weight and bias (saved in .pth).
+        # index 6: final classification
+        # 512 → 8 disease classes
+        # Weights loaded from keys '1.6.*'
     )
 
-    # Wrap backbone and head as Sequential
+    # Wrap as Sequential matching training structure
     model = nn.Sequential(backbone, head)
-    # model[0] = ConvNeXt-Base backbone
-    # model[1] = custom classifier head
-    # This matches exactly how the model was saved
-    # during training (confirmed from key inspection).
+    # model[0] = ConvNeXt-Base backbone (keys '0.*')
+    # model[1] = classifier head (keys '1.*')
 
     return model
 
@@ -106,64 +156,52 @@ def load_model():
     Loads trained ConvNeXt-Base weights from disk.
     Called once at Django startup via apps.py ready().
 
+    The state dict uses strict=True which means
+    every key must match exactly — guaranteeing
+    the correct architecture is used.
+
     Raises:
         FileNotFoundError: If .pth file not found.
-        RuntimeError: If weights don't match architecture.
+        RuntimeError: If architecture mismatch.
     """
     global MODEL
 
-    model     = build_model()
+    model = build_model()
+
     state_dict = torch.load(
         settings.MODEL_PATH,
         map_location=DEVICE,
         weights_only=True)
+    # weights_only=True: security measure.
+    # Only loads tensor data, not Python objects.
 
-    # The state dict uses '0.' prefix for backbone
-    # and '1.' prefix for head.
-    # This matches our nn.Sequential structure exactly.
-    # No DataParallel prefix to remove (confirmed clean).
+    missing, unexpected = model.load_state_dict(
+        state_dict, strict=True)
+    # strict=True: every key must match.
+    # Zero missing, zero unexpected — verified.
+    #
+    # Key mapping:
+    # '0.*'   → ConvNeXt-Base backbone weights
+    # '1.0.p' → GeM learned p parameter (≈2.80)
+    # '1.2.*' → BatchNorm1d weights
+    # '1.3.*' → Linear(1024→512) weights
+    # '1.6.*' → Linear(512→8) weights
 
-    # Load backbone weights (keys starting with '0.')
-    backbone_sd = {
-        k[2:]: v
-        for k, v in state_dict.items()
-        if k.startswith('0.')}
-
-    # Load head weights (keys starting with '1.')
-    # Skip '1.0.p' — the Dropout p parameter.
-    # It is corrupted in the saved file (value=2.79).
-    # Our head uses standard p=0.5 which is correct.
-    head_sd = {
-        k[2:]: v
-        for k, v in state_dict.items()
-        if k.startswith('1.')
-        and not k == '1.0.p'}
-    # Exclude the corrupted Dropout p value.
-    # Dropout has no learnable parameters — only p.
-    # All actual weights (BN, Linear) load fine.
-
-    # Load into backbone
-    missing_b, unexpected_b = \
-        model[0].load_state_dict(
-            backbone_sd, strict=True)
-    # strict=True ensures every key matches.
-
-    # Load into head
-    missing_h, unexpected_h = \
-        model[1].load_state_dict(
-            head_sd, strict=False)
-    # strict=False because we skip the Dropout p key.
-
-    if missing_b or unexpected_b:
+    if missing:
         raise RuntimeError(
-            f"Backbone load error — "
-            f"missing: {missing_b}, "
-            f"unexpected: {unexpected_b}")
+            f"Missing keys in model: {missing}\n"
+            f"Architecture mismatch — check classifier.py")
+
+    if unexpected:
+        raise RuntimeError(
+            f"Unexpected keys: {unexpected}\n"
+            f"Architecture mismatch — check classifier.py")
 
     model.to(DEVICE)
     model.eval()
-    # eval() disables Dropout and sets BatchNorm
-    # to use running statistics instead of batch stats.
+    # eval() disables:
+    # - Dropout (passes through without zeroing)
+    # - BatchNorm training mode (uses running stats)
     # Always call before inference.
 
     MODEL = model
@@ -171,18 +209,24 @@ def load_model():
 
 def classify(tensor):
     """
-    Runs preprocessed tensor through ConvNeXt-Base
-    and returns predictions.
+    Runs preprocessed image tensor through
+    ConvNeXt-Base and returns predictions.
 
     Args:
-        tensor (torch.Tensor): (1, 3, 224, 224)
+        tensor (torch.Tensor): Shape (1, 3, 384, 384)
+            Preprocessed and normalized image tensor.
 
     Returns:
         tuple:
-            - predicted_class (str): e.g. "Melanoma"
-            - confidence_scores_json (str): JSON of all probs
-            - predicted_confidence (float): 0.0 to 1.0
-            - predicted_index (int): 0 to 7
+            - predicted_class (str):
+              e.g. "Melanoma"
+            - confidence_scores_json (str):
+              JSON of all 8 class probabilities.
+              e.g. '{"Melanoma": 0.8734, ...}'
+            - predicted_confidence (float):
+              Probability of predicted class. 0.0-1.0.
+            - predicted_index (int):
+              Index 0-7 of predicted class.
 
     Raises:
         RuntimeError: If model not loaded.
@@ -191,29 +235,41 @@ def classify(tensor):
         raise RuntimeError(
             "ConvNeXt-Base model is not loaded. "
             "Ensure convnext_base_90pct.pth exists "
-            "in models/ and Django restarted.")
+            "in models/ directory and Django restarted.")
 
     tensor = tensor.to(DEVICE)
 
     with torch.no_grad():
-        outputs       = MODEL(tensor)
-        # (1, 8) — raw logit scores
+        # Disable gradient computation for inference.
+        # Saves memory and speeds up prediction.
+
+        outputs = MODEL(tensor)
+        # Forward pass through ConvNeXt-Base + GeM head.
+        # Output: (1, 8) raw logit scores.
 
         probabilities = torch.softmax(outputs, dim=1)
-        # (1, 8) — probabilities summing to 1.0
+        # Convert logits to probabilities.
+        # All 8 values sum to exactly 1.0.
 
         predicted_index = torch.argmax(
             probabilities, dim=1).item()
+        # Index of the class with highest probability.
 
+    # Build output structures
     probs_list = probabilities[0].tolist()
+    # Convert tensor to Python list.
 
     scores_dict = {
         DISEASE_CLASSES[i]: round(probs_list[i], 4)
         for i in range(NUM_CLASSES)}
+    # Dict of class_name → probability.
+    # Rounded to 4 decimal places.
 
     predicted_class      = DISEASE_CLASSES[predicted_index]
     predicted_confidence = scores_dict[predicted_class]
     confidence_scores_json = json.dumps(scores_dict)
+    # JSON string for storage in MySQL TEXT column.
+    # Frontend parses this to render a bar chart.
 
     return (predicted_class,
             confidence_scores_json,

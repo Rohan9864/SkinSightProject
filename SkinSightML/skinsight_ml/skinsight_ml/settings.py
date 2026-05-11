@@ -157,3 +157,7 @@ SPRING_BOOT_URL = os.getenv(
     'http://localhost:8080')
 # Not used for API calls but useful for logging
 # and knowing which Spring Boot instance to work with.
+
+MODEL_PATH = os.path.join(
+    BASE_DIR, 'models',
+    'convnext_base_90pct.pth')

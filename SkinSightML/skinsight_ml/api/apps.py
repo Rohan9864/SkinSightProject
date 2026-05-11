@@ -1,4 +1,5 @@
 from django.apps import AppConfig
+import os
 
 
 class ApiConfig(AppConfig):
@@ -6,15 +7,22 @@ class ApiConfig(AppConfig):
     name = 'api'
 
     def ready(self):
+        # RUN_MAIN is set only in the child process.
+        # This prevents the model from loading twice
+        # during development with StatReloader.
+        if os.environ.get('RUN_MAIN') != 'true':
+            return
+        # Only the child process (RUN_MAIN=true)
+        # actually handles requests.
+        # Parent process just watches for file changes.
+
         try:
             from .ml.classifier import load_model
             load_model()
-            print("✅ ResNet-50 model loaded successfully")
+            print("✅ ConvNeXt-Base model loaded (88% val acc)")
+            print("   Ready to analyze skin lesion images.")
         except FileNotFoundError:
-            print("⚠️  Model weights not found at models/")
-            print("   Train the model first or download weights.")
-            print("   Django will still start but /api/analyze")
-            print("   will return an error until model is loaded.")
+            print("⚠️  Model not found.")
+            print("   Expected: models/convnext_base_90pct.pth")
         except Exception as e:
-            print(f"⚠️  Could not load model: {e}")
-            print("   Django will still start.")
+            print(f"⚠️  Model load error: {e}")

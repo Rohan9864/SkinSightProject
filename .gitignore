@@ -29,6 +29,9 @@ SkinSightML/skinsight_ml/models/*.ckpt
 SkinSightML/skinsight_ml/models/*.pkl
 SkinSightML/skinsight_ml/models/*.bin
 
+!SkinSightML/skinsight_ml/models/README.md
+!SkinSightML/skinsight_ml/models/.gitkeep
+
 # Django secrets
 SkinSightML/skinsight_ml/.env
 

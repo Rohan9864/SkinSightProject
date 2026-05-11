@@ -15,13 +15,11 @@ __pycache__/
 *.pyo
 *.pyd
 
-# Django specific
+# Django database and logs
 SkinSightML/skinsight_ml/db.sqlite3
 SkinSightML/skinsight_ml/*.log
 
-# ML model weights — too large for GitHub
-# GitHub limit is 100MB. Models are 300MB+.
-# Download separately after cloning.
+# ML model weights — GitHub limit is 100MB, models are 300MB+
 SkinSightML/skinsight_ml/models/*.pth
 SkinSightML/skinsight_ml/models/*.pt
 SkinSightML/skinsight_ml/models/*.h5
@@ -29,20 +27,27 @@ SkinSightML/skinsight_ml/models/*.ckpt
 SkinSightML/skinsight_ml/models/*.pkl
 SkinSightML/skinsight_ml/models/*.bin
 
+# Allow README and gitkeep inside models/
 !SkinSightML/skinsight_ml/models/README.md
 !SkinSightML/skinsight_ml/models/.gitkeep
+
+# Training data and checkpoints
+SkinSightML/skinsight_ml/training/data/
+SkinSightML/skinsight_ml/training/checkpoints/
+
+# Allow training source files
+!SkinSightML/skinsight_ml/training/README.md
+!SkinSightML/skinsight_ml/training/train_convnext.ipynb
+!SkinSightML/skinsight_ml/training/requirements_training.txt
+!SkinSightML/skinsight_ml/training/.gitkeep
 
 # Django secrets
 SkinSightML/skinsight_ml/.env
 
 # ══════════════════════════════════════════════════════════════
-# UPLOADS — runtime generated files
+# UPLOADS — runtime generated, never pushed
 # ══════════════════════════════════════════════════════════════
 uploads/
-# Covers uploads/ at project root level.
-# Spring Boot saves images here at runtime.
-# Django reads from and writes heatmaps here.
-# Never pushed — generated at runtime.
 
 # ══════════════════════════════════════════════════════════════
 # JAVA / SPRING BOOT (SkinSightBackend)

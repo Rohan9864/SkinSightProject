@@ -48,69 +48,88 @@ public class DiagnosisResultServiceImpl implements DiagnosisResultService{
     private UserRepository userRepository;
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public DiagnosisResultResponseDto processAndSaveResult(Long caseId) {
+    @Transactional
+    public DiagnosisResultResponseDto processAndSaveResult(
+            Long caseId) {
 
-        Case skinCase = caseRepository.findById(caseId).orElseThrow(()->
-                new ResourceNotFoundException("Case not found with id: "
-                        + caseId));
-        if (skinCase.getStatus()!= CaseStatus.PENDING){
-            throw new BadRequestException( "Case is not in PENDING status. "
-                    + "Current status: "+skinCase.getStatus());
-        }
+        log.info("Processing ML for case {}", caseId);
 
-        if (diagnosisResultRepository.existsBySkinCaseId(caseId)){
-            throw new ConflictException( "AI result already exists "
-                    + "for case: " + caseId);
-        }
-        log.info(
-                "Sending case {} to ML service "
-                        + "for analysis", caseId);
+        Case skinCase = caseRepository
+                .findById(caseId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Case not found: " + caseId));
 
-        MLResponseDto mlResult = mlServiceClient.analyzeImage(
-                caseId,
+        log.info("Case found. Status: {} Image: {}",
+                skinCase.getStatus(),
                 skinCase.getImageUrl());
 
-        SeverityLevel severityLevel;
-
-        try {
-            severityLevel=SeverityLevel.valueOf(
-                    mlResult.getSeverityLevel()
-                            .toUpperCase());
-        }catch (IllegalArgumentException e){
-            log.error(
-                    "Invalid severity level from ML" +
-                            "Service: {}",
-                    mlResult.getSeverityLevel());
-            throw new BadRequestException( "Invalid severity level returned "
-                    + "by AI service: "
-                    + mlResult.getSeverityLevel());
+        if (skinCase.getStatus() != CaseStatus.PENDING) {
+            throw new BadRequestException(
+                    "Case is not PENDING. Status: "
+                            + skinCase.getStatus());
         }
 
-        DiagnosisResult diagnosisResult = DiagnosisResult.builder()
-                .skinCase(skinCase)
-                .predictedClass(mlResult.getPredictedClass())
-                .confidenceScores(mlResult.getConfidenceScores())
-                .heatMapUrl(mlResult.getHeatmapUrl())
-                .severityScore(mlResult.getSeverityScore())
-                .severityLevel(severityLevel)
-                .build();
+        if (diagnosisResultRepository
+                .existsBySkinCaseId(caseId)) {
+            throw new ConflictException(
+                    "Result already exists for case: " + caseId);
+        }
 
-        DiagnosisResult savedResult = diagnosisResultRepository.save(diagnosisResult);
+        // Call Django
+        MLResponseDto mlResult =
+                mlServiceClient.analyzeImage(
+                        caseId,
+                        skinCase.getImageUrl());
 
+        log.info("ML response: predicted={} severity={}",
+                mlResult.getPredictedClass(),
+                mlResult.getSeverityLevel());
+
+        // Convert severity string to enum
+        SeverityLevel severityLevel;
+        try {
+            severityLevel = SeverityLevel.valueOf(
+                    mlResult.getSeverityLevel().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException(
+                    "Invalid severity from ML: "
+                            + mlResult.getSeverityLevel());
+        }
+
+        // Save DiagnosisResult
+        DiagnosisResult diagnosisResult =
+                DiagnosisResult.builder()
+                        .skinCase(skinCase)
+                        .predictedClass(
+                                mlResult.getPredictedClass())
+                        .confidenceScores(
+                                mlResult.getConfidenceScores())
+                        .heatMapUrl(
+                                mlResult.getHeatmapUrl())
+                        .severityScore(
+                                mlResult.getSeverityScore())
+                        .severityLevel(severityLevel)
+                        .build();
+
+        DiagnosisResult saved =
+                diagnosisResultRepository
+                        .save(diagnosisResult);
+
+        log.info("DiagnosisResult saved for case {}. ID: {}",
+                caseId, saved.getId());
+
+        // Update case status to UNDER_REVIEW
         skinCase.setStatus(CaseStatus.UNDER_REVIEW);
         caseRepository.save(skinCase);
 
+        log.info("Case {} status updated to UNDER_REVIEW",
+                caseId);
+
+        // Notify admins
         notifyAdmin(caseId);
 
-        log.info( "Saved diagnosis result for case {}. "
-                        + "Predicted: {}, Severity: {}",
-                caseId,
-                mlResult.getPredictedClass(),
-                severityLevel);
-
-        return diagnosisResultMapper.toDto(savedResult);
-
+        return diagnosisResultMapper.toDto(saved);
     }
 
     private void notifyAdmin(Long caseId) {

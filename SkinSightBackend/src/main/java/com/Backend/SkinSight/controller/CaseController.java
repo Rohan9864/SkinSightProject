@@ -44,7 +44,7 @@ public class CaseController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @GetMapping("/{my}")
+    @GetMapping("/my")
     @PreAuthorize("hasRole('PATIENT')")
     public ResponseEntity<List<CaseResponseDto>>getMyCases(
             @RequestAttribute("userId") Long patientId){

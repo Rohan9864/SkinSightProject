@@ -161,3 +161,7 @@ SPRING_BOOT_URL = os.getenv(
 MODEL_PATH = os.path.join(
     BASE_DIR, 'models',
     'convnext_base_90pct.pth')
+
+ROOT_URLCONF = 'skinsight_ml.urls'
+
+APPEND_SLASH = False

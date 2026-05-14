@@ -8,6 +8,7 @@ import com.Backend.SkinSight.entity.User;
 import com.Backend.SkinSight.enums.AuditAction;
 import com.Backend.SkinSight.enums.CaseStatus;
 import com.Backend.SkinSight.enums.Role;
+import com.Backend.SkinSight.event.CaseCreatedEvent;
 import com.Backend.SkinSight.exception.BadRequestException;
 import com.Backend.SkinSight.exception.ResourceNotFoundException;
 import com.Backend.SkinSight.mapper.CaseMapper;
@@ -18,6 +19,7 @@ import com.Backend.SkinSight.service.diagnosis.DiagnosisResultService;
 import com.Backend.SkinSight.service.file.FileStorageService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -47,12 +49,17 @@ public class CaseServiceImpl implements CaseService{
     @Autowired
     private AuditLogService auditLogService;
 
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
+
     @Override
     public CaseResponseDto createCase(Long patientId, MultipartFile image, CreateCaseRequestDto dto) {
         User patient = userRepository.findById(patientId).orElseThrow(()->
                 new ResourceNotFoundException("Patient not found : "+ patientId));
 
         FileUploadResponseDto uploadedFile = fileStorageService.storeCaseImage(image,patientId);
+
+        log.info("Image saved: {}", uploadedFile.getFilePath());
 
         Case newCase;
         try{
@@ -69,24 +76,23 @@ public class CaseServiceImpl implements CaseService{
                     .build();
 
             newCase = caseRepository.save(newCase);
+            log.info("Case {} created. Image: {}",
+                    newCase.getId(),
+                    newCase.getImageUrl());
         } catch (Exception e){
             fileStorageService.deleteFile(uploadedFile.getFilePath());
             throw e;
         }
 
-        final Long caseId= newCase.getId();
-        try {
-            diagnosisResultService.processAndSaveResult(caseId);
-            log.info(
-                    "ML processing completed for case: {}",
-                    caseId);
-        }catch (Exception e){
-            log.warn(
-                    "ML processing skipped for case {} "
-                            + "— Django service unavailable: {}",
-                    caseId,
-                    e.getMessage());
-        }
+        final Long caseId = newCase.getId();
+        final String imageUrl = newCase.getImageUrl();
+
+        eventPublisher.publishEvent(new CaseCreatedEvent(
+                this,
+                newCase.getId(),
+                newCase.getImageUrl()));
+        log.info("CaseCreatedEvent published for case {}",
+                newCase.getId());
 
         return caseMapper.toDto(newCase);
     }

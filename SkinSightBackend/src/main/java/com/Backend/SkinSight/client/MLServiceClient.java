@@ -30,7 +30,7 @@ public class MLServiceClient {
 
     public MLResponseDto analyzeImage(
             Long caseId,
-            String imageUrl){
+            String imageUrl) {
 
         MLRequestDto requestBody = MLRequestDto.builder()
                 .caseId(caseId)
@@ -39,44 +39,68 @@ public class MLServiceClient {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<MLRequestDto> entity =
+                new HttpEntity<>(requestBody, headers);
 
-        HttpEntity<MLRequestDto> entity = new HttpEntity<>(requestBody,headers);
+        String fullUrl = mlServiceUrl + mlServiceEndpoint;
 
-        String fullUrl =mlServiceUrl + mlServiceEndpoint ;
-         log.info("Calling ML service for case: {}",caseId);
+        log.info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        log.info("ML REQUEST");
+        log.info("URL:      {}", fullUrl);
+        log.info("Case ID:  {}", caseId);
+        log.info("Image:    {}", imageUrl);
+        log.info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
-         try {
-             ResponseEntity<MLResponseDto> response = restTemplate.postForEntity(
-                     fullUrl,
-                     entity,
-                     MLResponseDto.class);
+        try {
+            ResponseEntity<MLResponseDto> response =
+                    restTemplate.postForEntity(
+                            fullUrl,
+                            entity,
+                            MLResponseDto.class);
 
-             MLResponseDto result = response.getBody();
-             if (result == null || !result.isSuccess()){
-                 String errorMsg = result !=null
-                         ? result.getErrorMessage()
-                         :"No response from ML service";
-                 log.error("ML service returned failure "
-                                 + "for case {}: {}",
-                         caseId, errorMsg);
-                 throw new BadRequestException("AI analysis failed: " + errorMsg);
+            MLResponseDto result = response.getBody();
 
-             }
+            log.info("ML RESPONSE");
+            log.info("Status:    {}",
+                    response.getStatusCode());
+            log.info("Success:   {}",
+                    result != null
+                            ? result.isSuccess()
+                            : "null body");
 
-             log.info(
-                     "ML service completed analysis" +
-                             "for case:{}. Predicted: {}",
-                     caseId,result.getPredictedClass());
+            if (result == null) {
+                throw new BadRequestException(
+                        "ML service returned empty response.");
+            }
 
-             return result;
-         } catch (RestClientException e){
-             log.error( "Failed to connect to ML service "
-                             + "for case {}: {}",
-                     caseId, e.getMessage());
+            if (!result.isSuccess()) {
+                log.error("ML returned failure: {}",
+                        result.getErrorMessage());
+                throw new BadRequestException(
+                        "AI analysis failed: "
+                                + result.getErrorMessage());
+            }
 
-             throw new BadRequestException("Could not reach the AI service. "
-                     + "Please try again later.");
+            log.info("Predicted: {}",
+                    result.getPredictedClass());
+            log.info("Severity:  {}",
+                    result.getSeverityLevel());
 
-         }
+            return result;
+
+        } catch (RestClientException e) {
+            log.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+            log.error("ML CONNECTION FAILED");
+            log.error("URL:   {}", fullUrl);
+            log.error("Type:  {}",
+                    e.getClass().getSimpleName());
+            log.error("Error: {}", e.getMessage());
+            log.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+            throw new BadRequestException(
+                    "Could not reach ML service. "
+                            + "Is Django running on port 8000? "
+                            + "Error: " + e.getMessage());
+        }
     }
+
 }

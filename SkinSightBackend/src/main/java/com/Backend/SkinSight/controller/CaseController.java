@@ -3,11 +3,9 @@ package com.Backend.SkinSight.controller;
 import com.Backend.SkinSight.dto.request.AssignCaseRequestDto;
 import com.Backend.SkinSight.dto.request.CreateCaseRequestDto;
 import com.Backend.SkinSight.dto.response.CaseResponseDto;
-import com.Backend.SkinSight.entity.Case;
 import com.Backend.SkinSight.service.cases.CaseService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -53,9 +51,10 @@ public class CaseController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('PATIENT','DOCTOR','ADMIN')")
-    public ResponseEntity<CaseResponseDto> getCaseBYId(
-            @PathVariable Long id){
-        return ResponseEntity.ok(caseService.getCaseById(id));
+    public ResponseEntity<CaseResponseDto> getCaseById(
+            @PathVariable Long id,
+            @RequestAttribute("userId") Long userId){
+        return ResponseEntity.ok(caseService.getCaseById(id,userId));
     }
 
     @GetMapping("/pending")

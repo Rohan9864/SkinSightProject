@@ -2,6 +2,7 @@ package com.Backend.SkinSight.mapper;
 
 import com.Backend.SkinSight.dto.response.CaseResponseDto;
 import com.Backend.SkinSight.entity.Case;
+import com.Backend.SkinSight.enums.CaseStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -14,9 +15,15 @@ public class CaseMapper {
     private DoctorReviewMapper doctorReviewMapper;
 
     public CaseResponseDto toDto(Case skinCase){
+        return toDto(skinCase,false);
+    }
+
+    public CaseResponseDto toDto(Case skinCase, boolean isStaff){
         if (skinCase==null){
             return null;
         }
+
+        boolean showResult = isStaff || skinCase.getStatus()== CaseStatus.RELEASED;
         return CaseResponseDto.builder()
                 .id(skinCase.getId())
                 .patientId(skinCase.getPatient().getId())
@@ -29,14 +36,13 @@ public class CaseMapper {
                 .submittedAt(skinCase.getSubmittedAt())
                 .updatedAt((skinCase.getUpdatedAt()))
                 .diagnosisResult(
-                        skinCase.getDiagnosisResult()!=null
-                                ?diagnosisResultMapper.toDto(skinCase.getDiagnosisResult())
+                        showResult && skinCase.getDiagnosisResult() != null
+                        ? diagnosisResultMapper.toDto(skinCase.getDiagnosisResult())
                                 :null)
                 .doctorReview(
-                        skinCase.getDoctorReview() != null
-                                ? doctorReviewMapper.toDto(
-                                skinCase.getDoctorReview())
-                                : null)
+                        showResult && skinCase.getDoctorReview() != null
+                        ? doctorReviewMapper.toDto(skinCase.getDoctorReview())
+                                :null)
                 .assignedDoctorId(
                         skinCase.getAssignedDoctor() != null
                                 ? skinCase.getAssignedDoctor().getId()

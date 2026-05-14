@@ -1,5 +1,6 @@
 package com.Backend.SkinSight.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,7 +12,9 @@ import lombok.NoArgsConstructor;
 @Builder
 public class MLRequestDto {
 
+    @JsonProperty("case_id")
     private Long caseId;
 
-    private String ImageUrl;
+    @JsonProperty("image_url")
+    private String imageUrl;
 }

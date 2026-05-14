@@ -34,7 +34,7 @@ public class MLServiceClient {
 
         MLRequestDto requestBody = MLRequestDto.builder()
                 .caseId(caseId)
-                .ImageUrl(imageUrl)
+                .imageUrl(imageUrl)
                 .build();
 
         HttpHeaders headers = new HttpHeaders();

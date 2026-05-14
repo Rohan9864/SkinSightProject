@@ -11,6 +11,7 @@ import com.Backend.SkinSight.enums.Role;
 import com.Backend.SkinSight.event.CaseCreatedEvent;
 import com.Backend.SkinSight.exception.BadRequestException;
 import com.Backend.SkinSight.exception.ResourceNotFoundException;
+import com.Backend.SkinSight.exception.UnauthorizedException;
 import com.Backend.SkinSight.mapper.CaseMapper;
 import com.Backend.SkinSight.repository.CaseRepository;
 import com.Backend.SkinSight.repository.UserRepository;
@@ -98,10 +99,21 @@ public class CaseServiceImpl implements CaseService{
     }
 
     @Override
-    public CaseResponseDto getCaseById(Long caseId) {
+    public CaseResponseDto getCaseById(Long caseId,Long requesterId) {
         Case skinCase = caseRepository.findById(caseId).orElseThrow(()->
                 new ResourceNotFoundException("Case not found with id: " + caseId));
-        return caseMapper.toDto(skinCase);
+
+        User requester = userRepository.findById(requesterId).orElseThrow(()->
+                new ResourceNotFoundException("User not found : " + requesterId));
+        if (requester.getRole()==Role.PATIENT &&
+                !skinCase.getPatient().getId().equals(requesterId)){
+            throw new UnauthorizedException("You can only access your own cases.");
+        }
+
+        boolean isStaff = requester.getRole() == Role.DOCTOR
+                          || requester.getRole() == Role.ADMIN ;
+
+        return caseMapper.toDto(skinCase,isStaff);
     }
 
     @Override

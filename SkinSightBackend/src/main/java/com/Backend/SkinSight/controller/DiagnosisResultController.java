@@ -15,15 +15,14 @@ public class DiagnosisResultController {
     private DiagnosisResultService diagnosisResultService;
 
     @PostMapping("/process/{caseId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'PATIENT')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<DiagnosisResultResponseDto> processCase(@PathVariable Long caseId){
 
-        DiagnosisResultResponseDto response = diagnosisResultService.processAndSaveResult(caseId);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(diagnosisResultService.processAndSaveResult(caseId));
     }
 
     @GetMapping("/cases/{caseId}")
-    @PreAuthorize("hasAnyRole('PATIENT', 'DOCTOR', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('DOCTOR', 'ADMIN')")
     public ResponseEntity<DiagnosisResultResponseDto> getResultByCase(@PathVariable Long caseId){
 
         return ResponseEntity.ok(diagnosisResultService.getResultByCase(caseId));

@@ -6,8 +6,13 @@ import com.Backend.SkinSight.exception.BadRequestException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.*;
+import tools.jackson.databind.ObjectMapper;
+
+import java.util.Map;
+import java.util.Objects;
 
 @Component
 @Slf4j
@@ -16,8 +21,8 @@ public class MLServiceClient {
     @Autowired
     private RestClient restClient;
 
-    @Value("${ml.service.url:http://localhost:8000}")
-    private String mlServiceUrl;
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Value("${ml.service.endpoint:/api/analyze/}")
     private String mlEndpoint;
@@ -26,69 +31,61 @@ public class MLServiceClient {
             Long caseId,
             String imageUrl) {
 
-        MLRequestDto requestBody = MLRequestDto.builder()
-                .caseId(caseId)
-                .imageUrl(imageUrl)
-                .build();
+        String jsonBody;
+
+        try {
+            Map<String, Object> requestMap = Map.of(
+                    "case_id",   caseId,
+                    "image_url", imageUrl);
+
+            jsonBody = objectMapper.writeValueAsString(requestMap);
+
+        }catch (Exception e){
+            throw new BadRequestException("Failed to serialize ML request: "
+                    + e.getMessage());
+        }
 
         log.info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
         log.info("ML REQUEST");
         log.info("Endpoint: {}", mlEndpoint);
-        log.info("Case ID:  {}", caseId);
-        log.info("Image:    {}", imageUrl);
+        log.info("Body:     {}", jsonBody);
         log.info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
         try {
-            MLResponseDto result = restClient
+            String responseBody = restClient
                     .post()
                     .uri(mlEndpoint)
-                    .body(requestBody)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(jsonBody)
                     .retrieve()
-                    .onStatus(
-                            status -> status.is4xxClientError(),
+                    .onStatus(status -> status.is4xxClientError()
+                                    || status.is5xxServerError(),
                             (request, response) -> {
-                                // Read Django's error response body.
-                                byte[] bodyBytes =
-                                        response.getBody()
-                                                .readAllBytes();
-                                String responseBody =
-                                        new String(bodyBytes);
+                                // Read error response body
+                                byte[] bytes = response
+                                        .getBody()
+                                        .readAllBytes();
+                                String errBody =
+                                        new String(bytes);
                                 log.error(
-                                        "Django returned 4xx: {}",
-                                        responseBody);
-
+                                        "Django error response: {}",
+                                        errBody);
                                 throw new BadRequestException(
-                                        "ML service returned error: "
-                                                + responseBody);
+                                        "ML service error: "
+                                                + errBody);
                             })
+                    .body(String.class);
 
-                    .onStatus(
-                            status -> status.is5xxServerError(),
-                            (request, response) -> {
-                                byte[] bodyBytes =
-                                        response.getBody()
-                                                .readAllBytes();
-                                String responseBody =
-                                        new String(bodyBytes);
+            MLResponseDto result = objectMapper.readValue(
+                    responseBody,
+                    MLResponseDto.class);
 
-                                log.error(
-                                        "Django returned 5xx: {}",
-                                        responseBody);
-
-                                throw new BadRequestException(
-                                        "ML service internal error: "
-                                                + responseBody);
-                            })
-
-                    .body(MLResponseDto.class);
-
-            if (result == null) {
-                throw new BadRequestException(
-                        "ML service returned empty response.");
+            if (result == null){
+                throw new BadRequestException("ML service returned empty response.");
             }
 
             if (!result.isSuccess()) {
-                log.error("Django reported failure: {}",
+                log.error("Django failure: {}",
                         result.getErrorMessage());
                 throw new BadRequestException(
                         "AI analysis failed: "
@@ -99,8 +96,6 @@ public class MLServiceClient {
             log.info("ML RESPONSE");
             log.info("Predicted: {}",
                     result.getPredictedClass());
-            log.info("Confidence: {}",
-                    result.getConfidenceScores());
             log.info("Severity:  {}",
                     result.getSeverityLevel());
             log.info("Score:     {}",
@@ -108,31 +103,26 @@ public class MLServiceClient {
             log.info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
             return result;
-
-        } catch (ResourceAccessException e) {
-            log.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-            log.error("ML SERVICE UNREACHABLE");
-            log.error("Endpoint: {}{}",
-                    "http://localhost:8000", mlEndpoint);
-            log.error("Cause: {}", e.getMessage());
-            log.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        } catch (ResourceAccessException e){
+            log.error("ML service unreachable: {}",
+                    e.getMessage());
             throw new BadRequestException(
                     "Cannot reach ML service. "
-                            + "Is Django running on port 8000? "
-                            + e.getMessage());
-
-        } catch (RestClientResponseException e) {
-            log.error("ML HTTP error: {} — {}",
+                            + "Is Django running on port 8000?");
+        }catch (RestClientResponseException e){
+            log.error("ML HTTP error {}: {}",
                     e.getStatusCode(),
                     e.getResponseBodyAsString());
-            throw new BadRequestException(
-                    "ML service HTTP error: "
-                            + e.getStatusCode()
-                            + " — "
-                            + e.getResponseBodyAsString());
-
-        } catch (BadRequestException e) {
+            throw new BadRequestException("ML service HTTP error: "
+                    + e.getStatusCode());
+        }catch (BadRequestException e){
             throw e;
+        }catch (Exception e){
+            log.error("Unexpected ML error: {}",
+                    e.getMessage());
+            throw new BadRequestException(
+                    "Unexpected ML error: "
+                            + e.getMessage());
         }
     }
 }

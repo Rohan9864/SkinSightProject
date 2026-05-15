@@ -11,8 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class MLResponseDto {
-
-
+    
     @JsonProperty("case_id")
     private Long caseId;
 

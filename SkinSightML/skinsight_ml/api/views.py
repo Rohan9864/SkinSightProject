@@ -44,6 +44,13 @@ class AnalyzeView(APIView):
 
     def post(self, request):
 
+        print("=== DJANGO RECEIVED ===")
+        print(f"Content-Type: {request.content_type}")
+        print(f"Body: {request.body}")
+        print(f"Data: {request.data}")
+        print("======================")
+        
+
         # ── Step 1: Validate incoming request ─────────────────
         serializer = AnalyzeRequestSerializer(
             data=request.data)

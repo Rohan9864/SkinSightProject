@@ -28,7 +28,7 @@ public class Report {
     private User generatedBy;
 
     @Column(nullable = false)
-    private String reportUrl;
+    private String filePath;
 
     @CreationTimestamp
     @Column(updatable = false)

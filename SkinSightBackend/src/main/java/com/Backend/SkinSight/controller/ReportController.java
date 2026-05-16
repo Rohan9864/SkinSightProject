@@ -16,13 +16,11 @@ public class ReportController {
     private ReportService reportService;
 
     @PostMapping("/cases/{caseId}")
-    @PreAuthorize("hasRole('DOCTOR')")
+    @PreAuthorize("hasAnyRole('PATIENT','DOCTOR','ADMIN')")
     public ResponseEntity<ReportResponseDto> generateReport(
-            @PathVariable Long caseId,
-            @RequestAttribute("userId") Long doctorId){
-        ReportResponseDto response = reportService.generateReport(caseId,doctorId);
-        return ResponseEntity.status(
-                HttpStatus.CREATED).body(response);
+            @PathVariable Long caseId){
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(reportService.generateReport(caseId));
     }
 
 
@@ -34,10 +32,10 @@ public class ReportController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('DOCTOR', 'ADMIN')")
-    public ResponseEntity<ReportResponseDto> getReportById(@PathVariable Long id){
-        ReportResponseDto response = reportService.getReportById(id);
+    @GetMapping("/{reportId}")
+    @PreAuthorize("hasAnyRole('PATIENT','DOCTOR', 'ADMIN')")
+    public ResponseEntity<ReportResponseDto> getReportById(@PathVariable Long reportId){
+        ReportResponseDto response = reportService.getReportById(reportId);
 
         return ResponseEntity.ok(response);
     }

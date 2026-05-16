@@ -16,32 +16,12 @@ public class ReportMapper {
             return null;
         }
 
-        DoctorReview doctorReview =report.getSkinCase().getDoctorReview();
-
-        DiagnosisResult diagnosisResult=report.getSkinCase().getDiagnosisResult();
-
-        String finalDisease = null;
-        if (doctorReview !=null && diagnosisResult !=null){
-            if (doctorReview.getAction()==ReviewAction.OVERRIDDEN){
-                finalDisease=doctorReview.getOverriddenClass();
-            }else {
-                finalDisease=diagnosisResult.getPredictedClass();
-            }
-        }
-
-        String severity = null;
-        if (diagnosisResult !=null && diagnosisResult.getSeverityLevel() !=null){
-            severity=diagnosisResult.getSeverityLevel().name();
-        }
-
         return ReportResponseDto.builder()
                 .id(report.getId())
                 .caseId(report.getSkinCase().getId())
                 .patientName(report.getSkinCase().getPatient().getName())
-                .predictedDisease((finalDisease))
-                .severityLevel(severity)
-                .reportUrl(report.getReportUrl())
-                .generatedByName(report.getGeneratedBy().getName())
+                .filePath(report.getFilePath())
+                .downloadUrl("http://localhost:8080/"+report.getFilePath())
                 .generatedAt(report.getGeneratedAt())
                 .build();
     }

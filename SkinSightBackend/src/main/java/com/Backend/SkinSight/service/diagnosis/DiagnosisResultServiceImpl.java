@@ -120,7 +120,7 @@ public class DiagnosisResultServiceImpl implements DiagnosisResultService{
                 caseId, saved.getId());
 
         // Update case status to UNDER_REVIEW
-        skinCase.setStatus(CaseStatus.UNDER_REVIEW);
+//        skinCase.setStatus(CaseStatus.UNDER_REVIEW);
         caseRepository.save(skinCase);
 
         log.info("Case {} status updated to UNDER_REVIEW",

@@ -19,13 +19,9 @@ public class ReportResponseDto {
 
     private String patientName;
 
-    private String predictedDisease;
+    private String filePath;
 
-    private String severityLevel;
-
-    private String reportUrl;
-
-    private String generatedByName;
+    private String downloadUrl;
 
     private LocalDateTime generatedAt;
 

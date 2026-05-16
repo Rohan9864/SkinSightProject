@@ -20,8 +20,9 @@ public class ReportMapper {
                 .id(report.getId())
                 .caseId(report.getSkinCase().getId())
                 .patientName(report.getSkinCase().getPatient().getName())
+                .generatedByName(report.getGeneratedBy().getName())
                 .filePath(report.getFilePath())
-                .downloadUrl("http://localhost:8080/"+report.getFilePath())
+                .reportUrl(report.getReportUrl())
                 .generatedAt(report.getGeneratedAt())
                 .build();
     }

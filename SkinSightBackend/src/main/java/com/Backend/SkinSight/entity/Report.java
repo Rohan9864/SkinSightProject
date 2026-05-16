@@ -30,6 +30,9 @@ public class Report {
     @Column(nullable = false)
     private String filePath;
 
+    @Column(nullable = false)
+    private String reportUrl;
+
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime generatedAt;

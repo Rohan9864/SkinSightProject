@@ -19,9 +19,11 @@ public class ReportResponseDto {
 
     private String patientName;
 
+    private String generatedByName;
+
     private String filePath;
 
-    private String downloadUrl;
+    private String reportUrl;
 
     private LocalDateTime generatedAt;
 

@@ -18,11 +18,11 @@ public class ReportController {
     @PostMapping("/cases/{caseId}")
     @PreAuthorize("hasAnyRole('PATIENT','DOCTOR','ADMIN')")
     public ResponseEntity<ReportResponseDto> generateReport(
-            @PathVariable Long caseId){
+            @PathVariable Long caseId,
+            @RequestAttribute("userId") Long userId){
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(reportService.generateReport(caseId));
+                .body(reportService.generateReport(caseId,userId));
     }
-
 
     @GetMapping("/cases/{caseId}")
     @PreAuthorize("hasAnyRole('PATIENT', 'DOCTOR', 'ADMIN')")

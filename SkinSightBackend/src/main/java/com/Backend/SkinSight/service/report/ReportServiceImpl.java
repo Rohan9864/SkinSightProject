@@ -44,6 +44,8 @@ public class ReportServiceImpl implements ReportService{
     private DoctorReviewRepository doctorReviewRepository;
     @Autowired
     private DiagnosisResultRepository diagnosisResultRepository;
+    @Autowired
+    private UserRepository userRepository;
 
     @Value("${app.upload.reports.dir}")
     private String reportsDir;
@@ -98,7 +100,7 @@ public class ReportServiceImpl implements ReportService{
     }
 
     @Override
-    public ReportResponseDto generateReport(Long caseId) {
+    public ReportResponseDto generateReport(Long caseId,Long generatedByUserId) {
 
         Case skinCase = caseRepository.findById(caseId).orElseThrow(()->
                 new ResourceNotFoundException( "Case not found: " + caseId));
@@ -113,6 +115,11 @@ public class ReportServiceImpl implements ReportService{
         if (reportRepository.existsBySkinCaseId(caseId)){
             throw new ConflictException( "Report already exists for case: " + caseId);
         }
+
+        User generatedBy = userRepository.findById(generatedByUserId).orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "User not found: "
+                                        + generatedByUserId));
 
         DiagnosisResult diagnosis =
                 diagnosisResultRepository.findBySkinCaseId(caseId).orElseThrow(() ->
@@ -130,14 +137,16 @@ public class ReportServiceImpl implements ReportService{
 
         Report report = Report.builder()
                 .skinCase(skinCase)
+                .generatedBy(generatedBy)
                 .filePath(filePath)
+                .reportUrl(baseUrl + "/" + filePath)
                 .generatedAt(LocalDateTime.now())
                 .build();
 
         Report saved = reportRepository.save(report);
 
-        log.info("Report generated for case {}: {}",
-                caseId, filePath);
+        log.info("Report generated for case {} by user {}",
+                caseId, generatedByUserId);
         return reportMapper.toDto(saved);
 
     }
@@ -160,15 +169,18 @@ public class ReportServiceImpl implements ReportService{
 
     }
 
-    public String buildPdfAndSave(Case skinCase,
-                                  DiagnosisResult diagnosis,
-                                  DoctorReview review){
+    private String buildPdfAndSave(
+            Case skinCase,
+            DiagnosisResult diagnosis,
+            DoctorReview review) {
+
         try {
             Files.createDirectories(
                     Paths.get(reportsDir));
-        }catch (IOException e){
-            throw new BadRequestException("Cannot create reports directory: "
-                    + e.getMessage());
+        } catch (IOException e) {
+            throw new BadRequestException(
+                    "Cannot create reports directory: "
+                            + e.getMessage());
         }
 
         String timestamp = LocalDateTime.now()
@@ -178,24 +190,107 @@ public class ReportServiceImpl implements ReportService{
                 + skinCase.getId()
                 + "_" + timestamp + ".pdf";
 
-        String fullPath = reportsDir + fileName;
+        String workingDir = System.getProperty("user.dir");
+        String fullPath = workingDir
+                + File.separator
+                + reportsDir.replace("/", File.separator)
+                + fileName;
 
-        String relativePath =
-                "uploads/reports/" + fileName;
+        String relative = "uploads/reports/" + fileName;
+        log.info("Writing PDF to: {}", fullPath);
+
 
         Document document = new Document(
-                PageSize.A4,50,50,50,50);
+                PageSize.A4, 50, 50, 50, 50);
 
         try {
-            PdfWriter.getInstance(document,
-                    new FileOutputStream(fullPath));
+            Files.createDirectories(
+                    Paths.get(workingDir
+                            + File.separator
+                            + reportsDir.replace(
+                            "/", File.separator)));
 
+            PdfWriter.getInstance(
+                    document,
+                    new FileOutputStream(fullPath));
             document.open();
 
+            // ── 1. Header ─────────────────────────────────
             addHeader(document, skinCase.getId());
 
+            // ── 2. Patient Information ────────────────────
             addSectionHeading(document,
                     "Patient Information");
+            addInfoTable(document, new String[][]{
+                    {"Patient Name",
+                            skinCase.getPatient().getName()},
+                    {"Patient Email",
+                            skinCase.getPatient().getEmail()},
+                    {"Case ID",
+                            "#" + skinCase.getId()},
+                    {"Submission Date",
+                            formatDate(skinCase.getSubmittedAt())},
+                    {"Report Generated",
+                            formatDate(LocalDateTime.now())},
+            });
+            // ↑ This must use skinCase.getPatient()
+            // not review data. Double check this section
+            // is pulling from skinCase not review.
+
+            // ── 3. Case Details ───────────────────────────
+            addSectionHeading(document, "Case Details");
+            addInfoTable(document, new String[][]{
+                    {"Affected Body Area",
+                            orNA(skinCase.getBodyArea())},
+                    {"Patient Description",
+                            orNA(skinCase.getDescription())},
+                    {"Duration of Condition",
+                            orNA(skinCase.getDuration())},
+            });
+
+            // ── 4. AI Diagnosis ───────────────────────────
+            addSectionHeading(document,
+                    "AI Diagnosis Result");
+            addInfoTable(document, new String[][]{
+                    {"Predicted Condition",
+                            diagnosis.getPredictedClass()},
+                    {"Severity Level",
+                            diagnosis.getSeverityLevel().name()},
+                    {"Severity Score",
+                            String.format("%.4f",
+                                    diagnosis.getSeverityScore())},
+            });
+
+            // ── 5. Confidence Scores ──────────────────────
+//            addConfidenceTable(document,
+//                    diagnosis.getConfidenceScores());
+
+            document.newPage();
+
+            addSectionHeading(document, "AI Attention Heatmap");
+
+            document.add(new Paragraph(
+                    "Red and yellow areas indicate regions "
+                            + "the AI focused on most when making "
+                            + "its prediction.",
+                    smallFont()));
+            document.add(new Paragraph(" "));
+
+            // ── 6. Heatmap ────────────────────────────────
+            addHeatmapImage(document,
+                    diagnosis.getHeatMapUrl());
+
+            // ── 7. Clinical Review ────────────────────────
+            addSectionHeading(document,
+                    "Clinical Review");
+
+            // Determine final diagnosis
+            String finalDiagnosis =
+                    "OVERRIDDEN".equals(
+                            review.getAction().name())
+                            && review.getOverriddenClass() != null
+                            ? review.getOverriddenClass()
+                            : diagnosis.getPredictedClass();
 
             addInfoTable(document, new String[][]{
                     {"Reviewing Doctor",
@@ -203,30 +298,31 @@ public class ReportServiceImpl implements ReportService{
                     {"Review Action",
                             review.getAction().name()},
                     {"Final Diagnosis",
-                            review.getAction().name()
-                                    .equals("OVERRIDDEN")
-                                    ? review.getOverriddenClass()
-                                    : diagnosis.getPredictedClass()},
+                            finalDiagnosis},
                     {"Clinical Notes",
                             orNA(review.getClinicalNotes())},
                     {"Override Reason",
-                            orNA(review.getOverriddenReason())},
+                            orNA(review.getOverriddenClass())},
                     {"Review Date",
                             formatDate(review.getReviewedAt())},
             });
 
+            // ── 8. Disclaimer ─────────────────────────────
             addDisclaimer(document);
 
             document.close();
-        }catch (DocumentException | IOException e){
+
+        } catch (DocumentException | IOException e) {
             log.error("PDF generation failed: {}",
                     e.getMessage());
+            // Clean up partial file
+            new File(fullPath).delete();
             throw new BadRequestException(
-                    "Failed to generate PDF report: "
+                    "Failed to generate PDF: "
                             + e.getMessage());
         }
 
-        return relativePath;
+        return relative;
     }
 
     private void addHeader(Document doc, Long caseId) throws DocumentException {
@@ -244,7 +340,7 @@ public class ReportServiceImpl implements ReportService{
         title.setAlignment(Element.ALIGN_CENTER);
 
         Paragraph subtitle = new Paragraph(
-                "AI-Powered Skin Disease Detection System",
+                ":Skin Disease Screening and Clinical Review System",
                 FontFactory.getFont(
                         FontFactory.HELVETICA, 11,
                         new Color(190, 210, 255)));
@@ -323,79 +419,79 @@ public class ReportServiceImpl implements ReportService{
         doc.add(table);
     }
 
-    private void addConfidenceTable(
-            Document doc, String confidenceJson)
-            throws DocumentException {
-
-        doc.add(new Paragraph(
-                "Confidence Scores:",
-                labelFont()));
-        doc.add(new Paragraph(" "));
-
-        // Parse the JSON string manually
-        // Format: {"Melanoma": 0.3819, "Nevi": 0.261, ...}
-        PdfPTable table = new PdfPTable(2);
-        table.setWidthPercentage(80);
-        table.setWidths(new float[]{60f, 40f});
-        table.setHorizontalAlignment(
-                Element.ALIGN_LEFT);
-
-        // Header row
-        PdfPCell h1 = new PdfPCell(
-                new Phrase("Disease Class", labelFont()));
-        PdfPCell h2 = new PdfPCell(
-                new Phrase("Confidence", labelFont()));
-        h1.setBackgroundColor(PRIMARY_BLUE);
-        h2.setBackgroundColor(PRIMARY_BLUE);
-        h1.getPhrase().getFont().setColor(WHITE);
-        h2.getPhrase().getFont().setColor(WHITE);
-        h1.setPadding(6);
-        h2.setPadding(6);
-        table.addCell(h1);
-        table.addCell(h2);
-
-        // Parse and add each class score
-        try {
-            String cleaned = confidenceJson
-                    .replace("{", "")
-                    .replace("}", "")
-                    .replace("\"", "");
-            // e.g. "Melanoma: 0.3819, Nevi: 0.261"
-
-            String[] entries = cleaned.split(",");
-            boolean alt = false;
-            for (String entry : entries) {
-                String[] parts = entry
-                        .trim().split(":");
-                if (parts.length == 2) {
-                    String cls  = parts[0].trim();
-                    String conf = parts[1].trim();
-                    double val  = Double.parseDouble(conf);
-                    String pct  = String.format(
-                            "%.2f%%", val * 100);
-
-                    Color bg = alt ? LIGHT_GREY : WHITE;
-                    PdfPCell c1 = new PdfPCell(
-                            new Phrase(cls, valueFont()));
-                    PdfPCell c2 = new PdfPCell(
-                            new Phrase(pct, valueFont()));
-                    c1.setBackgroundColor(bg);
-                    c2.setBackgroundColor(bg);
-                    c1.setPadding(5);
-                    c2.setPadding(5);
-                    table.addCell(c1);
-                    table.addCell(c2);
-                    alt = !alt;
-                }
-            }
-        } catch (Exception e) {
-            // If parsing fails just skip the table
-            log.warn("Could not parse confidence scores"
-                    + " for PDF: {}", e.getMessage());
-        }
-
-        doc.add(table);
-    }
+//    private void addConfidenceTable(
+//            Document doc, String confidenceJson)
+//            throws DocumentException {
+//
+//        doc.add(new Paragraph(
+//                "Confidence Scores:",
+//                labelFont()));
+//        doc.add(new Paragraph(" "));
+//
+//        // Parse the JSON string manually
+//        // Format: {"Melanoma": 0.3819, "Nevi": 0.261, ...}
+//        PdfPTable table = new PdfPTable(2);
+//        table.setWidthPercentage(80);
+//        table.setWidths(new float[]{60f, 40f});
+//        table.setHorizontalAlignment(
+//                Element.ALIGN_LEFT);
+//
+//        // Header row
+//        PdfPCell h1 = new PdfPCell(
+//                new Phrase("Disease Class", labelFont()));
+//        PdfPCell h2 = new PdfPCell(
+//                new Phrase("Confidence", labelFont()));
+//        h1.setBackgroundColor(PRIMARY_BLUE);
+//        h2.setBackgroundColor(PRIMARY_BLUE);
+//        h1.getPhrase().getFont().setColor(WHITE);
+//        h2.getPhrase().getFont().setColor(WHITE);
+//        h1.setPadding(6);
+//        h2.setPadding(6);
+//        table.addCell(h1);
+//        table.addCell(h2);
+//
+//        // Parse and add each class score
+//        try {
+//            String cleaned = confidenceJson
+//                    .replace("{", "")
+//                    .replace("}", "")
+//                    .replace("\"", "");
+//            // e.g. "Melanoma: 0.3819, Nevi: 0.261"
+//
+//            String[] entries = cleaned.split(",");
+//            boolean alt = false;
+//            for (String entry : entries) {
+//                String[] parts = entry
+//                        .trim().split(":");
+//                if (parts.length == 2) {
+//                    String cls  = parts[0].trim();
+//                    String conf = parts[1].trim();
+//                    double val  = Double.parseDouble(conf);
+//                    String pct  = String.format(
+//                            "%.2f%%", val * 100);
+//
+//                    Color bg = alt ? LIGHT_GREY : WHITE;
+//                    PdfPCell c1 = new PdfPCell(
+//                            new Phrase(cls, valueFont()));
+//                    PdfPCell c2 = new PdfPCell(
+//                            new Phrase(pct, valueFont()));
+//                    c1.setBackgroundColor(bg);
+//                    c2.setBackgroundColor(bg);
+//                    c1.setPadding(5);
+//                    c2.setPadding(5);
+//                    table.addCell(c1);
+//                    table.addCell(c2);
+//                    alt = !alt;
+//                }
+//            }
+//        } catch (Exception e) {
+//            // If parsing fails just skip the table
+//            log.warn("Could not parse confidence scores"
+//                    + " for PDF: {}", e.getMessage());
+//        }
+//
+//        doc.add(table);
+//    }
 
     private void addHeatmapImage(
             Document doc, String heatmapUrl)
@@ -403,43 +499,54 @@ public class ReportServiceImpl implements ReportService{
 
         if (heatmapUrl == null
                 || heatmapUrl.isBlank()) {
+            try {
+                doc.add(new Paragraph(
+                        "Heatmap image not available.",
+                        smallFont()));
+            } catch (Exception ignored) {}
             return;
         }
 
         try {
-            // heatmapUrl is relative:
-            // "uploads/heatmaps/case_1_heatmap.jpg"
-            File heatmapFile = new File(heatmapUrl);
+            String workingDir =
+                    System.getProperty("user.dir");
+            String absolutePath = workingDir
+                    + File.separator
+                    + heatmapUrl.replace(
+                    "/", File.separator);
+
+            File heatmapFile = new File(absolutePath);
 
             if (!heatmapFile.exists()) {
-                log.warn("Heatmap file not found: {}",
-                        heatmapUrl);
+                log.warn("Heatmap not found: {}",
+                        absolutePath);
+                doc.add(new Paragraph(
+                        "Heatmap image not found on server.",
+                        smallFont()));
                 return;
             }
 
-            doc.add(new Paragraph(" "));
-            doc.add(new Paragraph(
-                    "AI Attention Heatmap:",
-                    labelFont()));
-            doc.add(new Paragraph(
-                    "Red areas indicate regions the AI "
-                            + "focused on for its prediction.",
-                    smallFont()));
-            doc.add(new Paragraph(" "));
-
             Image heatmap = Image.getInstance(
-                    heatmapFile.getAbsolutePath());
-            heatmap.scaleToFit(300, 300);
-            // Scale to max 300x300 points.
-            // Maintains aspect ratio.
+                    absolutePath);
+            heatmap.scaleToFit(350, 350);
+            // Slightly larger now since it has
+            // the full page to itself.
             heatmap.setAlignment(Element.ALIGN_CENTER);
-
             doc.add(heatmap);
 
+            log.info("Heatmap embedded successfully.");
+
         } catch (IOException e) {
-            log.warn("Could not embed heatmap in PDF: {}",
+            log.warn("Could not embed heatmap: {}",
                     e.getMessage());
-            // Non-fatal — continue without heatmap image.
+            try {
+                doc.add(new Paragraph(
+                        "Heatmap image could not be loaded.",
+                        smallFont()));
+            } catch (DocumentException de) {
+                log.error("PDF write error: {}",
+                        de.getMessage());
+            }
         }
     }
 
@@ -485,7 +592,7 @@ public class ReportServiceImpl implements ReportService{
         doc.add(new Paragraph(" "));
         Paragraph footer = new Paragraph(
                 "Generated by SkinSight — "
-                        + "AI-Powered Skin Disease Detection System  |  "
+                        + ":Skin Disease Screening and Clinical Review System  |  "
                         + formatDate(LocalDateTime.now()),
                 smallFont());
         footer.setAlignment(Element.ALIGN_CENTER);

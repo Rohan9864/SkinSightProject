@@ -19,7 +19,7 @@ class ApiConfig(AppConfig):
         try:
             from .ml.classifier import load_model
             load_model()
-            print("✅ ConvNeXt-Base model loaded (88% val acc)")
+            print("✅ ConvNeXt-Base model loaded successfully.")
             print("   Ready to analyze skin lesion images.")
         except FileNotFoundError:
             print("⚠️  Model not found.")

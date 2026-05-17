@@ -19,7 +19,7 @@ __pycache__/
 SkinSightML/skinsight_ml/db.sqlite3
 SkinSightML/skinsight_ml/*.log
 
-# ML model weights — GitHub limit is 100MB, models are 300MB+
+# ML model weights — GitHub limit is 100MB
 SkinSightML/skinsight_ml/models/*.pth
 SkinSightML/skinsight_ml/models/*.pt
 SkinSightML/skinsight_ml/models/*.h5
@@ -64,6 +64,30 @@ SkinSightBackend/*.log
 SkinSightBackend/logs/
 
 # ══════════════════════════════════════════════════════════════
+# REACT / VITE (SkinSightFrontend)
+# ══════════════════════════════════════════════════════════════
+
+# Dependencies — never push, always npm install
+SkinSightFrontend/skinsight-frontend/node_modules/
+
+# Vite build output
+SkinSightFrontend/skinsight-frontend/dist/
+SkinSightFrontend/skinsight-frontend/dist-ssr/
+
+# Environment files
+SkinSightFrontend/skinsight-frontend/.env
+SkinSightFrontend/skinsight-frontend/.env.local
+SkinSightFrontend/skinsight-frontend/.env.production
+
+# Vite cache
+SkinSightFrontend/skinsight-frontend/.vite/
+
+# npm logs
+SkinSightFrontend/skinsight-frontend/npm-debug.log*
+SkinSightFrontend/skinsight-frontend/yarn-debug.log*
+SkinSightFrontend/skinsight-frontend/yarn-error.log*
+
+# ══════════════════════════════════════════════════════════════
 # IDE FILES
 # ══════════════════════════════════════════════════════════════
 .idea/
@@ -78,6 +102,9 @@ out/
 .settings/
 .factorypath
 
+# Allow VS Code settings we deliberately created
+!SkinSightFrontend/skinsight-frontend/.vscode/settings.json
+
 # ══════════════════════════════════════════════════════════════
 # OS FILES
 # ══════════════════════════════════════════════════════════════
@@ -90,10 +117,26 @@ Desktop.ini
 $RECYCLE.BIN/
 
 # ══════════════════════════════════════════════════════════════
-# ENVIRONMENT FILES
+# ENVIRONMENT FILES (catches any remaining level)
 # ══════════════════════════════════════════════════════════════
 .env
 .env.local
 .env.production
 .env.development
 .env.test
+
+# ══════════════════════════════════════════════════════════════
+# LOGS (any level)
+# ══════════════════════════════════════════════════════════════
+*.log
+logs/
+
+# ══════════════════════════════════════════════════════════════
+# MISC
+# ══════════════════════════════════════════════════════════════
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.local

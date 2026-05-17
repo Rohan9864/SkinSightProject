@@ -1,0 +1,52 @@
+import {
+  createContext,
+  useState,
+  useEffect,
+  useContext
+} from 'react';
+
+const AuthContext = createContext(null);
+
+export function AuthProvider({ children }) {
+  const [user, setUser]       = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const token  = localStorage.getItem('token');
+    const stored = localStorage.getItem('user');
+    if (token && stored) {
+      try {
+        setUser(JSON.parse(stored));
+      } catch {
+        localStorage.clear();
+      }
+    }
+    setLoading(false);
+  }, []);
+
+  const login = (userData, token) => {
+    localStorage.setItem('token', token);
+    localStorage.setItem('user',
+        JSON.stringify(userData));
+    setUser(userData);
+  };
+
+  const logout = () => {
+    localStorage.clear();
+    setUser(null);
+  };
+
+  return (
+    <AuthContext.Provider
+        value={{ user, login, logout, loading }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export const useAuth = () => {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error(
+    'useAuth must be inside AuthProvider');
+  return ctx;
+};

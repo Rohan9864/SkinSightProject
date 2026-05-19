@@ -8,6 +8,8 @@ import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import PatientDashboard from './pages/patient/PatientDashboard';
+import PatientCasesListPage from './pages/patient/PatientCasesListPage';
+import PatientNotificationsPage from './pages/patient/PatientNotificationsPage';
 import SubmitCasePage from './pages/patient/SubmitCasePage';
 import CaseDetailPage from './pages/patient/CaseDetailPage';
 import DoctorDashboard from './pages/doctor/DoctorDashboard';
@@ -41,6 +43,18 @@ export default function App() {
           <Route path="/patient" element={
             <ProtectedRoute allowedRoles={['PATIENT']}>
               <PatientDashboard />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/patient/cases" element={
+            <ProtectedRoute allowedRoles={['PATIENT']}>
+              <PatientCasesListPage />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/patient/notifications" element={
+            <ProtectedRoute allowedRoles={['PATIENT']}>
+              <PatientNotificationsPage />
             </ProtectedRoute>
           } />
 

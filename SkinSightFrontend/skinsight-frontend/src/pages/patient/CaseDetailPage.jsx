@@ -12,7 +12,6 @@ import LoadingSpinner from '../../components/common/LoadingSpinner';
 import StatusBadge from '../../components/common/StatusBadge';
 import HeatmapViewer from '../../components/case/HeatmapViewer';
 import DiagnosisResultCard from '../../components/case/DiagnosisResultCard';
-import ConfidenceChart from '../../components/case/ConfidenceChart';
 import api from '../../api/axios';
 
 export default function CaseDetailPage() {
@@ -36,19 +35,28 @@ export default function CaseDetailPage() {
         api.get(`/api/reports/cases/${id}`).catch(() => null),
       ]);
 
-      setCaseData(caseRes.data);
+      const caseData = caseRes.data;
+      setCaseData(caseData);
 
       if (reportRes?.data?.reportUrl) {
         setReportUrl(reportRes.data.reportUrl);
       }
 
-      // If released, fetch diagnosis
-      if (caseRes.data.status === 'RELEASED') {
-        try {
-          const diagRes = await api.get(`/api/diagnosis/cases/${id}`);
-          setDiagnosis(diagRes.data);
-        } catch (error) {
-          console.error('Failed to fetch diagnosis:', error);
+      // If released, use diagnosis from case data or fetch separately
+      if (caseData.status === 'RELEASED') {
+        // First check if diagnosis is already in the case data
+        if (caseData.diagnosisResult) {
+          setDiagnosis(caseData.diagnosisResult);
+        } else {
+          // If not, try to fetch diagnosis separately
+          try {
+            const diagRes = await api.get(`/api/diagnosis/cases/${id}`);
+            setDiagnosis(diagRes.data);
+          } catch (error) {
+            console.error('Failed to fetch diagnosis:', error);
+            // Use empty diagnosis structure so page still shows
+            setDiagnosis({});
+          }
         }
       }
     } catch (error) {
@@ -100,9 +108,17 @@ export default function CaseDetailPage() {
     ? caseData.imageUrl
     : `http://localhost:8080/${caseData.imageUrl}`;
 
-  const heatmapUrl = diagnosis?.heatmapUrl?.startsWith('http')
-    ? diagnosis.heatmapUrl
-    : `http://localhost:8080/${diagnosis?.heatmapUrl}`;
+  // Get heatmap from diagnosis first, then check caseData
+  let heatmapUrl = null;
+  if (diagnosis?.heatmapUrl) {
+    heatmapUrl = diagnosis.heatmapUrl.startsWith('http')
+      ? diagnosis.heatmapUrl
+      : `http://localhost:8080/${diagnosis.heatmapUrl}`;
+  } else if (caseData.heatmapUrl) {
+    heatmapUrl = caseData.heatmapUrl.startsWith('http')
+      ? caseData.heatmapUrl
+      : `http://localhost:8080/${caseData.heatmapUrl}`;
+  }
 
   return (
     <DashboardLayout title={`Case #${id}`}>
@@ -270,11 +286,11 @@ export default function CaseDetailPage() {
 
               {/* Column 2: AI Diagnosis */}
               <div>
-                {diagnosis ? (
+                {diagnosis?.predictedClass || diagnosis?.class ? (
                   <DiagnosisResultCard diagnosisResult={diagnosis} />
                 ) : (
                   <div className="bg-white rounded-2xl border border-slate-200 p-6 text-center">
-                    <p className="text-slate-500 text-sm">No diagnosis data available.</p>
+                    <p className="text-slate-500 text-sm">AI diagnosis is being processed...</p>
                   </div>
                 )}
               </div>
@@ -336,13 +352,6 @@ export default function CaseDetailPage() {
                 )}
               </div>
             </div>
-
-            {/* Confidence Chart */}
-            {diagnosis?.confidenceScores && (
-              <div className="mb-6">
-                <ConfidenceChart confidenceScores={diagnosis.confidenceScores} />
-              </div>
-            )}
 
             {/* Report Generation */}
             <div className="bg-white rounded-2xl border border-slate-200 p-6">

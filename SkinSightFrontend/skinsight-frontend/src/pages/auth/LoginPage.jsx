@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form'
 import toast from 'react-hot-toast'
 import { useAuth } from '../../context/AuthContext'
 import api from '../../api/axios'
+import Logo from '../../components/common/Logo'
 
 export default function LoginPage() {
   const { login } = useAuth()
@@ -66,14 +67,7 @@ export default function LoginPage() {
         <div className="relative z-10 max-w-md text-center">
           {/* Logo */}
           <div className="flex items-center justify-center gap-3 mb-10">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br
-              from-sky-500 to-cyan-400 flex items-center justify-center
-              text-white font-bold text-xl shadow-lg shadow-sky-500/30">
-              SS
-            </div>
-            <span className="text-white font-bold text-2xl tracking-tight">
-              SkinSight
-            </span>
+            <Logo size="lg" showText={true} theme="dark" className="shadow-lg shadow-sky-500/20 rounded-xl bg-white/5 p-1" />
           </div>
 
           <h2 className="text-3xl font-bold text-white mb-4 leading-tight">
@@ -114,11 +108,8 @@ export default function LoginPage() {
         px-4 sm:px-8 lg:px-12 bg-white">
 
         {/* Mobile logo */}
-        <div className="lg:hidden flex items-center gap-2 mb-8">
-          <div className="w-9 h-9 rounded-lg bg-gradient-to-br
-            from-sky-500 to-cyan-400 flex items-center justify-center
-            text-white font-bold shadow">SS</div>
-          <span className="text-slate-800 font-bold text-xl">SkinSight</span>
+        <div className="lg:hidden flex items-center justify-center mb-8">
+          <Logo size="sm" showText={true} className="shadow-lg shadow-sky-500/20 rounded-lg bg-slate-100/90 p-1" />
         </div>
 
         <div className="w-full max-w-md">
@@ -250,6 +241,15 @@ export default function LoginPage() {
                   <span>⚠</span> {errors.password.message}
                 </p>
               )}
+            </div>
+
+            {/* Forgot Password Link */}
+            <div className="flex justify-end">
+              <Link to="/forgot-password"
+                className="text-sm text-sky-600 hover:text-sky-700 font-medium
+                  transition-colors">
+                Forgot password?
+              </Link>
             </div>
 
             {/* Submit */}

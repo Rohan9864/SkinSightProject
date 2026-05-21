@@ -1,22 +1,38 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/common/ProtectedRoute';
+import DashboardLayout from './components/layout/DashboardLayout';
 
 // Pages
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
+import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 import PatientDashboard from './pages/patient/PatientDashboard';
 import PatientCasesListPage from './pages/patient/PatientCasesListPage';
 import PatientNotificationsPage from './pages/patient/PatientNotificationsPage';
+import PatientProfilePage from './pages/patient/PatientProfilePage';
 import SubmitCasePage from './pages/patient/SubmitCasePage';
 import CaseDetailPage from './pages/patient/CaseDetailPage';
 import DoctorDashboard from './pages/doctor/DoctorDashboard';
+import DoctorProfilePage from './pages/doctor/DoctorProfilePage';
 import ReviewCasePage from './pages/doctor/ReviewCasePage';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminAllCasesPage from './pages/admin/AdminAllCasesPage';
 import ManageUsersPage from './pages/admin/ManageUsersPage';
 import AssignCasePage from './pages/admin/AssignCasePage';
+import AdminAuditLogsPage from './pages/admin/AdminAuditLogsPage';
+
+// Layout wrapper for dashboard pages
+function DashboardLayoutOutlet({ title = 'Dashboard' }) {
+  return (
+    <DashboardLayout title={title}>
+      <Outlet />
+    </DashboardLayout>
+  );
+}
 
 export default function App() {
   return (
@@ -38,69 +54,52 @@ export default function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
 
-          {/* Patient */}
-          <Route path="/patient" element={
-            <ProtectedRoute allowedRoles={['PATIENT']}>
-              <PatientDashboard />
-            </ProtectedRoute>
-          } />
+          {/* Patient Routes with Shared Layout - no sidebar blinking */}
+          <Route
+            element={
+              <ProtectedRoute allowedRoles={['PATIENT']}>
+                <DashboardLayoutOutlet />
+              </ProtectedRoute>
+            }
+          >
+            <Route path="/patient" element={<PatientDashboard />} />
+            <Route path="/patient/cases" element={<PatientCasesListPage />} />
+            <Route path="/patient/cases/:id" element={<CaseDetailPage />} />
+            <Route path="/patient/notifications" element={<PatientNotificationsPage />} />
+            <Route path="/patient/profile" element={<PatientProfilePage />} />
+            <Route path="/patient/submit" element={<SubmitCasePage />} />
+          </Route>
 
-          <Route path="/patient/cases" element={
-            <ProtectedRoute allowedRoles={['PATIENT']}>
-              <PatientCasesListPage />
-            </ProtectedRoute>
-          } />
+          {/* Doctor Routes with Shared Layout */}
+          <Route
+            element={
+              <ProtectedRoute allowedRoles={['DOCTOR']}>
+                <DashboardLayoutOutlet />
+              </ProtectedRoute>
+            }
+          >
+            <Route path="/doctor" element={<DoctorDashboard />} />
+            <Route path="/doctor/cases/:id" element={<ReviewCasePage />} />
+            <Route path="/doctor/profile" element={<DoctorProfilePage />} />
+          </Route>
 
-          <Route path="/patient/notifications" element={
-            <ProtectedRoute allowedRoles={['PATIENT']}>
-              <PatientNotificationsPage />
-            </ProtectedRoute>
-          } />
-
-          <Route path="/patient/submit" element={
-            <ProtectedRoute allowedRoles={['PATIENT']}>
-              <SubmitCasePage />
-            </ProtectedRoute>
-          } />
-
-          <Route path="/patient/cases/:id" element={
-            <ProtectedRoute allowedRoles={['PATIENT']}>
-              <CaseDetailPage />
-            </ProtectedRoute>
-          } />
-
-          {/* Doctor */}
-          <Route path="/doctor" element={
-            <ProtectedRoute allowedRoles={['DOCTOR']}>
-              <DoctorDashboard />
-            </ProtectedRoute>
-          } />
-
-          <Route path="/doctor/cases/:id" element={
-            <ProtectedRoute allowedRoles={['DOCTOR']}>
-              <ReviewCasePage />
-            </ProtectedRoute>
-          } />
-
-          {/* Admin */}
-          <Route path="/admin" element={
-            <ProtectedRoute allowedRoles={['ADMIN']}>
-              <AdminDashboard />
-            </ProtectedRoute>
-          } />
-
-          <Route path="/admin/users" element={
-            <ProtectedRoute allowedRoles={['ADMIN']}>
-              <ManageUsersPage />
-            </ProtectedRoute>
-          } />
-
-          <Route path="/admin/cases/:id" element={
-            <ProtectedRoute allowedRoles={['ADMIN']}>
-              <AssignCasePage />
-            </ProtectedRoute>
-          } />
+          {/* Admin Routes with Shared Layout */}
+          <Route
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN']}>
+                <DashboardLayoutOutlet />
+              </ProtectedRoute>
+            }
+          >
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/users" element={<ManageUsersPage />} />
+            <Route path="/admin/cases/:id" element={<AssignCasePage />} />
+            <Route path="/admin/all-cases" element={<AdminAllCasesPage />} />
+            <Route path="/admin/audit-logs" element={<AdminAuditLogsPage />} />
+          </Route>
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DocumentArrowUpIcon } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
-import DashboardLayout from '../../components/layout/DashboardLayout';
 import StatCard from '../../components/common/StatCard';
 import DataTable from '../../components/common/DataTable';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
@@ -104,7 +103,6 @@ export default function PatientDashboard() {
   ];
 
   return (
-    <DashboardLayout title="Patient Dashboard">
       <div className="space-y-6">
         {/* ROW 1: Stat Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -272,6 +270,5 @@ export default function PatientDashboard() {
           </div>
         )}
       </div>
-    </DashboardLayout>
   );
 }

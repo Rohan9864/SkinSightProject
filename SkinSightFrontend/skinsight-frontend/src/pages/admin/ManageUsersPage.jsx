@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { PlusIcon } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
-import DashboardLayout from '../../components/layout/DashboardLayout';
 import DataTable from '../../components/common/DataTable';
 import Modal from '../../components/common/Modal';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
@@ -243,7 +242,7 @@ export default function ManageUsersPage() {
   ];
 
   return (
-    <DashboardLayout title="Manage Users">
+    <>
       <div className="space-y-6">
         {/* Header with Tabs and Create Button */}
         <div className="flex items-center justify-between">
@@ -473,6 +472,6 @@ export default function ManageUsersPage() {
           </div>
         </form>
       </Modal>
-    </DashboardLayout>
+    </>
   );
 }

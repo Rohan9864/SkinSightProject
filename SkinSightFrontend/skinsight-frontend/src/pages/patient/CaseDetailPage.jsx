@@ -7,7 +7,6 @@ import {
   DocumentArrowUpIcon,
 } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
-import DashboardLayout from '../../components/layout/DashboardLayout';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import StatusBadge from '../../components/common/StatusBadge';
 import HeatmapViewer from '../../components/case/HeatmapViewer';
@@ -85,17 +84,15 @@ export default function CaseDetailPage() {
 
   if (!caseData) {
     return (
-      <DashboardLayout title="Case Details">
-        <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
-          <p className="text-slate-500 mb-4">Case not found</p>
-          <button
-            onClick={() => navigate('/patient')}
-            className="px-4 py-2.5 bg-sky-500 text-white rounded-lg font-semibold hover:bg-sky-600 transition-all"
-          >
-            Back to Dashboard
-          </button>
-        </div>
-      </DashboardLayout>
+      <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
+        <p className="text-slate-500 mb-4">Case not found</p>
+        <button
+          onClick={() => navigate('/patient')}
+          className="px-4 py-2.5 bg-sky-500 text-white rounded-lg font-semibold hover:bg-sky-600 transition-all"
+        >
+          Back to Dashboard
+        </button>
+      </div>
     );
   }
 
@@ -121,8 +118,7 @@ export default function CaseDetailPage() {
   }
 
   return (
-    <DashboardLayout title={`Case #${id}`}>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Header Card */}
         <div className="bg-white rounded-2xl border border-slate-200 p-6">
           <div className="flex items-start justify-between mb-4">
@@ -426,6 +422,5 @@ export default function CaseDetailPage() {
           </div>
         )}
       </div>
-    </DashboardLayout>
   );
 }

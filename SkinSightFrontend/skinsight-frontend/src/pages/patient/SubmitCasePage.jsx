@@ -7,7 +7,6 @@ import {
   ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
-import DashboardLayout from '../../components/layout/DashboardLayout';
 import api from '../../api/axios';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -129,7 +128,6 @@ export default function SubmitCasePage() {
   };
 
   return (
-    <DashboardLayout title="Submit New Case">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* LEFT: FORM (70%) */}
         <div className="lg:col-span-2 space-y-6">
@@ -368,6 +366,5 @@ export default function SubmitCasePage() {
           </div>
         </div>
       </div>
-    </DashboardLayout>
   );
 }

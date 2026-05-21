@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowRightIcon } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
-import DashboardLayout from '../../components/layout/DashboardLayout';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import api from '../../api/axios';
 
@@ -79,7 +78,6 @@ export default function AssignCasePage() {
 
   if (!caseData) {
     return (
-      <DashboardLayout title="Assign Case">
         <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
           <p className="text-slate-500 mb-4">Case not found</p>
           <button
@@ -89,7 +87,6 @@ export default function AssignCasePage() {
             Back to Dashboard
           </button>
         </div>
-      </DashboardLayout>
     );
   }
 
@@ -98,7 +95,6 @@ export default function AssignCasePage() {
     : `http://localhost:8080/${caseData.imageUrl}`;
 
   return (
-    <DashboardLayout title={`Assign Case #${id}`}>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* LEFT: Case Summary */}
         <div className="space-y-6">
@@ -262,6 +258,5 @@ export default function AssignCasePage() {
           </button>
         </div>
       </div>
-    </DashboardLayout>
   );
 }

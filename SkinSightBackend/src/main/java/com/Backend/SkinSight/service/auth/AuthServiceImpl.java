@@ -200,4 +200,24 @@ public class AuthServiceImpl implements AuthService{
 
         return userMapper.toDto(user);
     }
+
+    @Override
+    public void changePassword(Long userId, ChangePasswordRequestDto dto) {
+        User user = userRepository.findById(userId).orElseThrow(()->
+                new UnauthorizedException("User not found."));
+
+        if(!passwordEncoder.matches(dto.getCurrentPassword(), user.getPassword())){
+            throw new UnauthorizedException("Current password is incorrect.");
+        }
+
+        user.setPassword(passwordEncoder.encode(dto.getNewPassword()));
+        userRepository.save(user);
+
+        auditLogService.log(
+                userId,
+                AuditAction.USER_PASSWORD_RESET,
+                "User",
+                userId,
+                "Password changed for user: " + user.getEmail());
+    }
 }

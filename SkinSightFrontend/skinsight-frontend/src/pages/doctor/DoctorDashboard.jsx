@@ -6,7 +6,6 @@ import {
   SparklesIcon,
 } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
-import DashboardLayout from '../../components/layout/DashboardLayout';
 import StatCard from '../../components/common/StatCard';
 import DataTable from '../../components/common/DataTable';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
@@ -149,7 +148,6 @@ export default function DoctorDashboard() {
   const underReviewCases = cases.filter((c) => c.status === 'UNDER_REVIEW');
 
   return (
-    <DashboardLayout title="Doctor Dashboard">
       <div className="space-y-6">
         {/* ROW 1: Stat Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -289,6 +287,5 @@ export default function DoctorDashboard() {
           </div>
         </div>
       </div>
-    </DashboardLayout>
   );
 }

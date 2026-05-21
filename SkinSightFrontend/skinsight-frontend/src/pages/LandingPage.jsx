@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useState, useEffect } from 'react'
+import Logo from '../components/common/Logo'
 
 const FEATURES = [
   {
@@ -75,9 +76,7 @@ export default function LandingPage() {
           items-center justify-between h-16">
 
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br
-              from-sky-500 to-cyan-400 flex items-center justify-center
-              text-white font-bold text-sm shadow-md">SS</div>
+            <Logo size="md" />
             <span className={`font-bold text-lg tracking-tight transition-colors
               ${scrolled ? 'text-slate-800' : 'text-white'}`}>
               SkinSight
@@ -217,67 +216,33 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Mock result card */}
-            <div className="hidden lg:block">
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl
-                border border-white/20 p-6 shadow-2xl">
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br
-                    from-sky-400 to-cyan-300 flex items-center justify-center
-                    text-white font-bold text-sm">JP</div>
-                  <div>
-                    <div className="text-white font-semibold text-sm">Case #1042</div>
-                    <div className="text-slate-400 text-xs">Submitted 2 minutes ago</div>
-                  </div>
-                  <span className="ml-auto px-2.5 py-1 rounded-full text-xs
-                    font-semibold bg-emerald-500/20 text-emerald-300
-                    border border-emerald-500/30">Released</span>
+            {/* Featured SkinSight Logo */}
+            <div className="hidden lg:flex items-center justify-center">
+              <div className="relative flex flex-col items-center justify-center">
+                {/* Main Logo - Featured Prominently */}
+                <Logo size="2xl" animated={true} />
+                
+                {/* Animated glow effect */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="w-80 h-80 rounded-full bg-gradient-to-r from-sky-500/10 to-cyan-400/10 blur-3xl animate-pulse"/>
                 </div>
 
-                <div className="rounded-xl overflow-hidden mb-5 h-44
-                  bg-gradient-to-br from-slate-700 to-slate-800
-                  flex items-center justify-center relative">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-28 h-28 rounded-full opacity-60 blur-sm"
-                      style={{ background:'radial-gradient(circle, #ef4444 0%, #f59e0b 40%, #3b82f6 80%)' }}/>
+                {/* Process flow indicators */}
+                <div className="mt-12 flex gap-4 items-center text-sm text-slate-600">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-sky-500"/>
+                    <span>AI Analysis</span>
                   </div>
-                  <div className="relative z-10 bg-black/30 backdrop-blur-sm
-                    px-3 py-1.5 rounded-lg text-white/80 text-xs font-medium">
-                    Grad-CAM Heatmap
+                  <div className="w-6 h-0.5 bg-gradient-to-r from-sky-500 to-transparent"/>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-cyan-500"/>
+                    <span>Doctor Review</span>
                   </div>
-                </div>
-
-                <div className="space-y-3">
-                  {[
-                    { label:'AI Prediction', value:'Melanocytic Nevi', type:'text' },
-                    { label:'Confidence',    value:'82%',              type:'bar' },
-                    { label:'Severity',      value:'MODERATE',         type:'badge' },
-                    { label:'Doctor Review', value:'✓ Confirmed',      type:'success' },
-                  ].map(row => (
-                    <div key={row.label}
-                      className="flex justify-between items-center">
-                      <span className="text-slate-300 text-sm">{row.label}</span>
-                      {row.type === 'text' &&
-                        <span className="text-white font-semibold text-sm">{row.value}</span>}
-                      {row.type === 'bar' && (
-                        <div className="flex items-center gap-2">
-                          <div className="w-24 h-1.5 bg-slate-700 rounded-full overflow-hidden">
-                            <div className="h-full w-4/5 bg-gradient-to-r from-sky-500 to-cyan-400 rounded-full"/>
-                          </div>
-                          <span className="text-white text-sm font-mono">{row.value}</span>
-                        </div>
-                      )}
-                      {row.type === 'badge' && (
-                        <span className="px-2 py-0.5 rounded-full text-xs font-semibold
-                          bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                          {row.value}
-                        </span>
-                      )}
-                      {row.type === 'success' && (
-                        <span className="text-emerald-400 text-sm font-semibold">{row.value}</span>
-                      )}
-                    </div>
-                  ))}
+                  <div className="w-6 h-0.5 bg-gradient-to-r from-cyan-500 to-transparent"/>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500"/>
+                    <span>Verified Result</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -455,9 +420,9 @@ export default function LandingPage() {
           <div className="flex flex-col sm:flex-row items-center
             justify-between gap-4">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br
-                from-sky-500 to-cyan-400 flex items-center justify-center
-                text-white font-bold text-xs">SS</div>
+              <div className="flex items-center justify-center rounded-lg bg-slate-950/10 p-1">
+                <Logo size="sm" showText={false} />
+              </div>
               <span className="text-white font-bold">SkinSight</span>
             </div>
             <p className="text-slate-500 text-sm text-center">

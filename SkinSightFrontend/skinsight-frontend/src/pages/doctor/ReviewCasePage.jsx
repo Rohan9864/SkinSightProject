@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import DashboardLayout from '../../components/layout/DashboardLayout';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import HeatmapViewer from '../../components/case/HeatmapViewer';
 import DiagnosisResultCard from '../../components/case/DiagnosisResultCard';
@@ -130,7 +129,6 @@ export default function ReviewCasePage() {
 
   if (!caseData || !diagnosis) {
     return (
-      <DashboardLayout title="Review Case">
         <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
           <p className="text-slate-500 mb-4">Case or diagnosis not found</p>
           <button
@@ -140,7 +138,6 @@ export default function ReviewCasePage() {
             Back to Dashboard
           </button>
         </div>
-      </DashboardLayout>
     );
   }
 
@@ -158,7 +155,7 @@ export default function ReviewCasePage() {
     : `http://localhost:8080/${diagnosis?.heatmapUrl}`;
 
   return (
-    <DashboardLayout title={`Review Case #${id}`}>
+    <>
       <div className="space-y-6">
         {/* Patient Info Banner */}
         <div className="bg-gradient-to-r from-sky-50 to-cyan-50 border border-sky-200 rounded-2xl p-6">
@@ -379,6 +376,6 @@ export default function ReviewCasePage() {
         confirmLabel="Submit Review"
         cancelLabel="Cancel"
       />
-    </DashboardLayout>
+    </>
   );
 }

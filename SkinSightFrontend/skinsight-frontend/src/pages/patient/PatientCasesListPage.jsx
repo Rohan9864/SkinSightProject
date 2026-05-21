@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DocumentArrowUpIcon } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
-import DashboardLayout from '../../components/layout/DashboardLayout';
 import DataTable from '../../components/common/DataTable';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import StatusBadge from '../../components/common/StatusBadge';
@@ -86,8 +85,7 @@ export default function PatientCasesListPage() {
   ];
 
   return (
-    <DashboardLayout title="My Cases">
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Header with Submit Button */}
         <div className="flex items-center justify-between">
           <div>
@@ -129,6 +127,5 @@ export default function PatientCasesListPage() {
           )}
         </div>
       </div>
-    </DashboardLayout>
   );
 }

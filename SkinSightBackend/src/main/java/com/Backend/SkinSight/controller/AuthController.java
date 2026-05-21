@@ -77,5 +77,12 @@ public class AuthController {
                 .body(response);
     }
 
+    @PostMapping("/change-password")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<String> changePassword(
+            @RequestAttribute("userId") Long userId,
+            @Valid @RequestBody ChangePasswordRequestDto dto){
+        authService.changePassword(userId, dto);
+        return ResponseEntity.ok("Password changed successfully.");
+    }
 
-}

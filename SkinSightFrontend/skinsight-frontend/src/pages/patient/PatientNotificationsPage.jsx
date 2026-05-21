@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { BellIcon, CheckIcon } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
-import DashboardLayout from '../../components/layout/DashboardLayout';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import api from '../../api/axios';
 
@@ -58,8 +57,7 @@ export default function PatientNotificationsPage() {
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   return (
-    <DashboardLayout title="Notifications">
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -158,6 +156,5 @@ export default function PatientNotificationsPage() {
           )}
         </div>
       </div>
-    </DashboardLayout>
   );
 }

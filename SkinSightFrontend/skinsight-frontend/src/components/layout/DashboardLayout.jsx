@@ -20,6 +20,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
+import Logo from '../common/Logo';
 
 const navConfig = {
   PATIENT: [
@@ -36,10 +37,9 @@ const navConfig = {
   ],
   ADMIN: [
     { label: 'Dashboard', icon: HomeIcon, path: '/admin' },
-    { label: 'All Cases', icon: FolderIcon, path: '/admin/cases' },
-    { label: 'Assign Cases', icon: ArrowsUpDownIcon, path: '/admin/cases' },
+    { label: 'All Cases', icon: FolderIcon, path: '/admin/all-cases' },
     { label: 'Manage Users', icon: UsersIcon, path: '/admin/users' },
-    { label: 'Audit Logs', icon: ShieldCheckIcon, path: '/admin/audit' },
+    { label: 'Audit Logs', icon: ShieldCheckIcon, path: '/admin/audit-logs' },
   ],
 };
 
@@ -113,9 +113,7 @@ export default function DashboardLayout({ children, title = 'Dashboard' }) {
       >
         {/* Logo */}
         <div className="flex items-center justify-center gap-3 px-4 py-6 border-b border-slate-700">
-          <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-r from-sky-500 to-cyan-400 rounded-lg flex-shrink-0">
-            <span className="text-white font-bold text-sm">SS</span>
-          </div>
+          <Logo size="md" showText={false} className="flex-shrink-0" />
           {!sidebarIconOnly && (
             <span className="font-bold text-white text-sm">SkinSight</span>
           )}
@@ -186,9 +184,7 @@ export default function DashboardLayout({ children, title = 'Dashboard' }) {
         {/* Logo */}
         <div className="flex items-center justify-between px-4 py-6 border-b border-slate-700">
           <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-r from-sky-500 to-cyan-400 rounded-lg">
-              <span className="text-white font-bold text-sm">SS</span>
-            </div>
+            <Logo size="md" showText={false} />
             <span className="font-bold text-white text-sm">SkinSight</span>
           </div>
           <button

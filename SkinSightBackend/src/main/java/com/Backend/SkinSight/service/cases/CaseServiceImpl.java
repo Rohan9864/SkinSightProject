@@ -194,8 +194,7 @@ public class CaseServiceImpl implements CaseService{
 
     @Override
     public List<CaseResponseDto> getMyAssignedCases(Long doctorId) {
-        List<Case> cases = caseRepository.findByAssignedDoctorIdAndStatus(
-                doctorId,CaseStatus.UNDER_REVIEW);
+        List<Case> cases = caseRepository.findByAssignedDoctorId(doctorId);
 
         return cases.stream()
                 .map(caseMapper::toDto)

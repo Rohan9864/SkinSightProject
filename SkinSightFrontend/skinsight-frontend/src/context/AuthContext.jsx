@@ -12,16 +12,43 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token  = localStorage.getItem('token');
-    const stored = localStorage.getItem('user');
-    if (token && stored) {
-      try {
-        setUser(JSON.parse(stored));
-      } catch {
-        localStorage.clear();
+    const initializeAuth = async () => {
+      const token  = localStorage.getItem('token');
+      const stored = localStorage.getItem('user');
+      
+      if (token && stored) {
+        try {
+          // Validate token by calling a protected endpoint
+          const response = await fetch(
+            'http://localhost:8080/api/users/me',
+            {
+              method: 'GET',
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              },
+            }
+          );
+          
+          if (response.ok) {
+            // Token is valid, keep user logged in
+            setUser(JSON.parse(stored));
+          } else if (response.status === 401) {
+            // Token is expired or invalid, clear everything
+            localStorage.clear();
+            setUser(null);
+          }
+        } catch (error) {
+          // Network error or other issue, clear auth to be safe
+          console.error('Auth validation error:', error);
+          localStorage.clear();
+          setUser(null);
+        }
       }
-    }
-    setLoading(false);
+      setLoading(false);
+    };
+
+    initializeAuth();
   }, []);
 
   const login = (userData, token) => {

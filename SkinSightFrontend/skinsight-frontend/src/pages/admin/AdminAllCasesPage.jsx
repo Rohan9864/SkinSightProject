@@ -21,7 +21,11 @@ export default function AdminAllCasesPage() {
     try {
       setLoading(true);
       const response = await api.get('/api/cases');
-      setCases(response.data || []);
+      // Sort cases by submittedAt in descending order (latest first)
+      const sortedCases = (response.data || []).sort(
+        (a, b) => new Date(b.submittedAt) - new Date(a.submittedAt)
+      );
+      setCases(sortedCases);
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to load cases');
       console.error(error);

@@ -32,6 +32,7 @@ export default function AdminDashboard() {
   const [patients, setPatients] = useState([]);
   const [doctors, setDoctors] = useState([]);
   const [auditLogs, setAuditLogs] = useState([]);
+  const [notificationCount, setNotificationCount] = useState(0);
 
   useEffect(() => {
     fetchDashboardData();
@@ -47,10 +48,15 @@ export default function AdminDashboard() {
         api.get('/api/audit-logs'),
       ]);
 
-      setCases(casesRes.data || []);
+      // Sort cases by submittedAt in descending order (latest first)
+      const sortedCases = (casesRes.data || []).sort(
+        (a, b) => new Date(b.submittedAt) - new Date(a.submittedAt)
+      );
+
+      setCases(sortedCases);
       setPatients(patientsRes.data || []);
       setDoctors(doctorsRes.data || []);
-      setAuditLogs(auditRes.data || []);
+      setAuditLogs((auditRes.data || []).slice(0, 8));
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to load dashboard');
       console.error(error);
@@ -80,7 +86,7 @@ export default function AdminDashboard() {
 
   // Unassigned cases
   const unassignedCases = cases.filter(
-    (c) => c.status === 'UNDER_REVIEW' && !c.assignedDoctorId
+    (c) => c.status === 'PENDING' && !c.assignedDoctorId && !c.assignedDoctorName
   );
 
   // Doctor workload
@@ -230,7 +236,7 @@ export default function AdminDashboard() {
 
             {unassignedCases.length > 0 ? (
               <div className="space-y-3 max-h-72 overflow-y-auto">
-                {unassignedCases.slice(0, 8).map((c) => (
+                {unassignedCases.slice(0, 5).map((c) => (
                   <div
                     key={c.id}
                     className="flex items-start justify-between gap-2 p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
@@ -249,6 +255,14 @@ export default function AdminDashboard() {
                     </button>
                   </div>
                 ))}
+                {unassignedCases.length > 5 && (
+                  <button
+                    onClick={() => navigate('/admin/all-cases')}
+                    className="w-full text-center py-2.5 text-sky-600 hover:text-sky-700 font-semibold text-sm border-t border-slate-200 mt-2 transition-all hover:bg-sky-50 rounded"
+                  >
+                    See More ({unassignedCases.length - 5} more) →
+                  </button>
+                )}
               </div>
             ) : (
               <div className="text-center py-8">

@@ -49,27 +49,42 @@ export default function HeatmapViewer({
         )}
       </div>
 
-      {/* Image Viewer */}
-      <div className={`relative bg-slate-50 rounded-xl overflow-hidden ${imageZoomed ? 'fixed inset-0 z-40 rounded-none' : ''}`}>
+      {/* Image Viewer Container */}
+      {imageZoomed && (
+        <div
+          className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4"
+          onClick={() => setImageZoomed(false)}
+        >
+          <div
+            className="relative bg-slate-900 rounded-xl overflow-hidden max-w-full max-h-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={displayUrl}
+              alt={showHeatmap ? 'Grad-CAM Heatmap' : 'Original Skin Image'}
+              className="w-auto h-auto max-h-screen max-w-screen object-contain"
+              onError={(e) => {
+                e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"%3E%3Crect fill="%23f3f4f6" width="400" height="300"/%3E%3Ctext x="50%25" y="50%25" font-size="20" fill="%239ca3af" text-anchor="middle" dy=".3em"%3EImage not found%3C/text%3E%3C/svg%3E';
+              }}
+            />
+            <div className="absolute top-4 right-4 bg-white/90 text-slate-900 px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer hover:bg-white transition-all">
+              Close (ESC or Click)
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Normal Image Viewer */}
+      <div className="relative bg-slate-50 rounded-xl overflow-hidden">
         <img
           src={displayUrl}
           alt={showHeatmap ? 'Grad-CAM Heatmap' : 'Original Skin Image'}
-          onClick={() => setImageZoomed(!imageZoomed)}
-          className={`w-full h-auto object-contain transition-all cursor-zoom-in hover:opacity-95 ${
-            imageZoomed ? 'max-h-screen' : `max-h-96`
-          }`}
+          onClick={() => setImageZoomed(true)}
+          className="w-full h-auto object-contain max-h-96 cursor-zoom-in hover:opacity-95 transition-all"
           onError={(e) => {
             e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"%3E%3Crect fill="%23f3f4f6" width="400" height="300"/%3E%3Ctext x="50%25" y="50%25" font-size="20" fill="%239ca3af" text-anchor="middle" dy=".3em"%3EImage not found%3C/text%3E%3C/svg%3E';
           }}
         />
-        {imageZoomed && (
-          <div
-            className="absolute top-4 right-4 bg-black/70 text-white px-4 py-2 rounded-lg text-sm cursor-default"
-            onClick={(e) => e.stopPropagation()}
-          >
-            Click to close
-          </div>
-        )}
       </div>
 
       {/* Image Info */}

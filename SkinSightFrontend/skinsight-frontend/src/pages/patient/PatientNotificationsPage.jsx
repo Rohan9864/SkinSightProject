@@ -10,6 +10,9 @@ export default function PatientNotificationsPage() {
 
   useEffect(() => {
     fetchNotifications();
+    // Poll for notification updates every 10 seconds
+    const interval = setInterval(fetchNotifications, 10000);
+    return () => clearInterval(interval);
   }, []);
 
   const fetchNotifications = async () => {
@@ -28,12 +31,11 @@ export default function PatientNotificationsPage() {
   const markAsRead = async (notificationId) => {
     try {
       await api.patch(`/api/notifications/${notificationId}/read`);
-      // Update local state
-      setNotifications(
-        notifications.map((n) =>
-          n.id === notificationId ? { ...n, isRead: true } : n
-        )
+      // Update local state immediately
+      const updatedNotifications = notifications.map((n) =>
+        n.id === notificationId ? { ...n, isRead: true } : n
       );
+      setNotifications(updatedNotifications);
       toast.success('Marked as read');
     } catch (error) {
       toast.error('Failed to mark as read');
@@ -44,7 +46,8 @@ export default function PatientNotificationsPage() {
   const markAllAsRead = async () => {
     try {
       await api.patch('/api/notifications/my/read-all');
-      setNotifications(notifications.map((n) => ({ ...n, isRead: true })));
+      const updatedNotifications = notifications.map((n) => ({ ...n, isRead: true }));
+      setNotifications(updatedNotifications);
       toast.success('All notifications marked as read');
     } catch (error) {
       toast.error('Failed to mark all as read');

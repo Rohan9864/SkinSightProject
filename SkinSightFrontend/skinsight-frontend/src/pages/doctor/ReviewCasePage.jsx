@@ -4,7 +4,6 @@ import toast from 'react-hot-toast';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import HeatmapViewer from '../../components/case/HeatmapViewer';
 import DiagnosisResultCard from '../../components/case/DiagnosisResultCard';
-import ConfidenceChart from '../../components/case/ConfidenceChart';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import api from '../../api/axios';
 
@@ -201,12 +200,9 @@ export default function ReviewCasePage() {
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* LEFT COLUMN: Images + Confidence */}
+          {/* LEFT COLUMN: Images */}
           <div className="space-y-6">
             <HeatmapViewer originalUrl={imageUrl} heatmapUrl={heatmapUrl} />
-            {diagnosis?.confidenceScores && (
-              <ConfidenceChart confidenceScores={diagnosis.confidenceScores} />
-            )}
           </div>
 
           {/* RIGHT COLUMN: Diagnosis + Review Form */}

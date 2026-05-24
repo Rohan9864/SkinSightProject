@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import ConfirmDialog from '../common/ConfirmDialog';
 import {
   HomeIcon,
   ClipboardDocumentIcon,
@@ -32,11 +33,14 @@ const navConfig = {
   ],
   DOCTOR: [
     { label: 'Dashboard', icon: HomeIcon, path: '/doctor' },
-    { label: 'Assigned Cases', icon: ClipboardDocumentCheckIcon, path: '/doctor' },
+    { label: 'Assigned Cases', icon: ClipboardDocumentCheckIcon, path: '/doctor/assigned-cases' },
+    { label: 'Cases History', icon: CheckCircleIcon, path: '/doctor/cases-history' },
+    { label: 'Notifications', icon: BellIcon, path: '/doctor/notifications' },
     { label: 'Profile', icon: UserIcon, path: '/doctor/profile' },
   ],
   ADMIN: [
     { label: 'Dashboard', icon: HomeIcon, path: '/admin' },
+    { label: 'Notifications', icon: BellIcon, path: '/admin/notifications' },
     { label: 'All Cases', icon: FolderIcon, path: '/admin/all-cases' },
     { label: 'Manage Users', icon: UsersIcon, path: '/admin/users' },
     { label: 'Audit Logs', icon: ShieldCheckIcon, path: '/admin/audit-logs' },
@@ -50,6 +54,7 @@ export default function DashboardLayout({ children, title = 'Dashboard' }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
   const [sidebarIconOnly, setSidebarIconOnly] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   // Get navigation items for current user role
   const navItems = navConfig[user?.role] || [];
@@ -90,6 +95,11 @@ export default function DashboardLayout({ children, title = 'Dashboard' }) {
   }, []);
 
   const handleLogout = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const confirmLogout = () => {
+    setShowLogoutConfirm(false);
     logout();
     navigate('/login');
     toast.success('Logged out successfully');
@@ -295,6 +305,17 @@ export default function DashboardLayout({ children, title = 'Dashboard' }) {
           <div className="p-4 md:p-8">{children}</div>
         </main>
       </div>
+
+      {/* LOGOUT CONFIRMATION DIALOG */}
+      {showLogoutConfirm && (
+        <ConfirmDialog
+          title="Sign Out"
+          message="Are you sure you want to sign out? You'll be logged out of your account."
+          onConfirm={confirmLogout}
+          onCancel={() => setShowLogoutConfirm(false)}
+          isDangerous={true}
+        />
+      )}
     </div>
   );
 }

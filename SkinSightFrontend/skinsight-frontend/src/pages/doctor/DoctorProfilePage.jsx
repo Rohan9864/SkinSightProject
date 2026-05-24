@@ -12,11 +12,9 @@ export default function DoctorProfilePage() {
   const [changingPassword, setChangingPassword] = useState(false);
   const [profileData, setProfileData] = useState(null);
   const [formData, setFormData] = useState({
-    fullName: '',
-    email: '',
     phone: '',
     specialization: '',
-    licenseNumber: '',
+    hospitalAffiliation: '',
     yearsOfExperience: '',
   });
   const [passwordData, setPasswordData] = useState({
@@ -35,11 +33,9 @@ export default function DoctorProfilePage() {
       const response = await api.get('/api/profiles/doctor/me');
       setProfileData(response.data);
       setFormData({
-        fullName: response.data.fullName || '',
-        email: response.data.email || '',
         phone: response.data.phone || '',
         specialization: response.data.specialization || '',
-        licenseNumber: response.data.licenseNumber || '',
+        hospitalAffiliation: response.data.hospitalAffiliation || '',
         yearsOfExperience: response.data.yearsOfExperience || '',
       });
     } catch (error) {
@@ -128,48 +124,37 @@ export default function DoctorProfilePage() {
       {/* Profile Card */}
       <div className="bg-white rounded-2xl border border-slate-200 p-8">
         <div className="space-y-6">
-          {/* Name */}
+          {/* Name (Read-only) */}
           <div>
             <label className="text-sm font-semibold text-slate-700 flex items-center gap-2 mb-2">
               <UserIcon className="w-4 h-4" />
               Full Name
             </label>
-            {editing ? (
-              <input
-                type="text"
-                name="fullName"
-                value={formData.fullName}
-                onChange={handleInputChange}
-                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
-                placeholder="Enter your full name"
-              />
-            ) : (
-              <p className="text-base text-slate-600 font-medium">
-                {profileData?.fullName || 'Not provided'}
-              </p>
-            )}
+            <p className="text-base text-slate-600 font-medium">
+              {profileData?.name || 'Not available'}
+            </p>
           </div>
 
-          {/* Email */}
+          {/* Email (Read-only) */}
           <div>
             <label className="text-sm font-semibold text-slate-700 flex items-center gap-2 mb-2">
               <EnvelopeIcon className="w-4 h-4" />
               Email Address
             </label>
-            {editing ? (
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
-                placeholder="Enter your email"
-              />
-            ) : (
-              <p className="text-base text-slate-600 font-medium">
-                {profileData?.email || 'Not provided'}
-              </p>
-            )}
+            <p className="text-base text-slate-600 font-medium">
+              {profileData?.email || 'Not available'}
+            </p>
+          </div>
+
+          {/* License Number (Read-only) */}
+          <div>
+            <label className="text-sm font-semibold text-slate-700 flex items-center gap-2 mb-2">
+              <IdentificationIcon className="w-4 h-4" />
+              License Number
+            </label>
+            <p className="text-base text-slate-600 font-medium">
+              {profileData?.licenseNumber || 'Not provided'}
+            </p>
           </div>
 
           {/* Phone */}
@@ -216,28 +201,6 @@ export default function DoctorProfilePage() {
             )}
           </div>
 
-          {/* License Number */}
-          <div>
-            <label className="text-sm font-semibold text-slate-700 flex items-center gap-2 mb-2">
-              <IdentificationIcon className="w-4 h-4" />
-              License Number
-            </label>
-            {editing ? (
-              <input
-                type="text"
-                name="licenseNumber"
-                value={formData.licenseNumber}
-                onChange={handleInputChange}
-                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
-                placeholder="Enter your license number"
-              />
-            ) : (
-              <p className="text-base text-slate-600 font-medium">
-                {profileData?.licenseNumber || 'Not provided'}
-              </p>
-            )}
-          </div>
-
           {/* Years of Experience */}
           <div>
             <label className="text-sm font-semibold text-slate-700 flex items-center gap-2 mb-2">
@@ -250,12 +213,35 @@ export default function DoctorProfilePage() {
                 name="yearsOfExperience"
                 value={formData.yearsOfExperience}
                 onChange={handleInputChange}
+                min="0"
                 className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
                 placeholder="Enter years of experience"
               />
             ) : (
               <p className="text-base text-slate-600 font-medium">
-                {profileData?.yearsOfExperience || 'Not provided'} {profileData?.yearsOfExperience && 'years'}
+                {profileData?.yearsOfExperience ? `${profileData.yearsOfExperience} years` : 'Not provided'}
+              </p>
+            )}
+          </div>
+
+          {/* Hospital Affiliation */}
+          <div>
+            <label className="text-sm font-semibold text-slate-700 flex items-center gap-2 mb-2">
+              <BriefcaseIcon className="w-4 h-4" />
+              Hospital Affiliation
+            </label>
+            {editing ? (
+              <input
+                type="text"
+                name="hospitalAffiliation"
+                value={formData.hospitalAffiliation}
+                onChange={handleInputChange}
+                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                placeholder="Enter hospital or clinic affiliation"
+              />
+            ) : (
+              <p className="text-base text-slate-600 font-medium">
+                {profileData?.hospitalAffiliation || 'Not provided'}
               </p>
             )}
           </div>
@@ -273,11 +259,9 @@ export default function DoctorProfilePage() {
                 onClick={() => {
                   setEditing(false);
                   setFormData({
-                    fullName: profileData?.fullName || '',
-                    email: profileData?.email || '',
                     phone: profileData?.phone || '',
                     specialization: profileData?.specialization || '',
-                    licenseNumber: profileData?.licenseNumber || '',
+                    hospitalAffiliation: profileData?.hospitalAffiliation || '',
                     yearsOfExperience: profileData?.yearsOfExperience || '',
                   });
                 }}

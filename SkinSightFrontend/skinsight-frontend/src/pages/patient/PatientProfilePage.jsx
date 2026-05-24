@@ -12,11 +12,11 @@ export default function PatientProfilePage() {
   const [changingPassword, setChangingPassword] = useState(false);
   const [profileData, setProfileData] = useState(null);
   const [formData, setFormData] = useState({
-    fullName: '',
-    email: '',
+    age: '',
+    gender: '',
     phone: '',
-    dateOfBirth: '',
     address: '',
+    medicalHistory: '',
   });
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
@@ -34,11 +34,11 @@ export default function PatientProfilePage() {
       const response = await api.get('/api/profiles/patient/me');
       setProfileData(response.data);
       setFormData({
-        fullName: response.data.fullName || '',
-        email: response.data.email || '',
+        age: response.data.age || '',
+        gender: response.data.gender || '',
         phone: response.data.phone || '',
-        dateOfBirth: response.data.dateOfBirth || '',
         address: response.data.address || '',
+        medicalHistory: response.data.medicalHistory || '',
       });
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to load profile');
@@ -126,46 +126,73 @@ export default function PatientProfilePage() {
         {/* Profile Card */}
         <div className="bg-white rounded-2xl border border-slate-200 p-8">
           <div className="space-y-6">
-            {/* Name */}
+            {/* Name (Read-only) */}
             <div>
               <label className="text-sm font-semibold text-slate-700 flex items-center gap-2 mb-2">
                 <UserIcon className="w-4 h-4" />
                 Full Name
               </label>
-              {editing ? (
-                <input
-                  type="text"
-                  name="fullName"
-                  value={formData.fullName}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
-                  placeholder="Enter your full name"
-                />
-              ) : (
-                <p className="text-base text-slate-600 font-medium">
-                  {profileData?.fullName || 'Not provided'}
-                </p>
-              )}
+              <p className="text-base text-slate-600 font-medium">
+                {profileData?.name || 'Not available'}
+              </p>
             </div>
 
-            {/* Email */}
+            {/* Email (Read-only) */}
             <div>
               <label className="text-sm font-semibold text-slate-700 flex items-center gap-2 mb-2">
                 <EnvelopeIcon className="w-4 h-4" />
                 Email Address
               </label>
+              <p className="text-base text-slate-600 font-medium">
+                {profileData?.email || 'Not available'}
+              </p>
+            </div>
+
+            {/* Age */}
+            <div>
+              <label className="text-sm font-semibold text-slate-700 flex items-center gap-2 mb-2">
+                <CalendarIcon className="w-4 h-4" />
+                Age
+              </label>
               {editing ? (
                 <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
+                  type="number"
+                  name="age"
+                  value={formData.age}
                   onChange={handleInputChange}
+                  min="1"
+                  max="130"
                   className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
-                  placeholder="Enter your email"
+                  placeholder="Enter your age"
                 />
               ) : (
                 <p className="text-base text-slate-600 font-medium">
-                  {profileData?.email || 'Not provided'}
+                  {profileData?.age ? `${profileData.age} years` : 'Not provided'}
+                </p>
+              )}
+            </div>
+
+            {/* Gender */}
+            <div>
+              <label className="text-sm font-semibold text-slate-700 flex items-center gap-2 mb-2">
+                <UserIcon className="w-4 h-4" />
+                Gender
+              </label>
+              {editing ? (
+                <select
+                  name="gender"
+                  value={formData.gender}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                >
+                  <option value="">Select gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              ) : (
+                <p className="text-base text-slate-600 font-medium">
+                  {profileData?.gender || 'Not provided'}
                 </p>
               )}
             </div>
@@ -192,33 +219,6 @@ export default function PatientProfilePage() {
               )}
             </div>
 
-            {/* Date of Birth */}
-            <div>
-              <label className="text-sm font-semibold text-slate-700 flex items-center gap-2 mb-2">
-                <CalendarIcon className="w-4 h-4" />
-                Date of Birth
-              </label>
-              {editing ? (
-                <input
-                  type="date"
-                  name="dateOfBirth"
-                  value={formData.dateOfBirth}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
-                />
-              ) : (
-                <p className="text-base text-slate-600 font-medium">
-                  {profileData?.dateOfBirth
-                    ? new Date(profileData.dateOfBirth).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                      })
-                    : 'Not provided'}
-                </p>
-              )}
-            </div>
-
             {/* Address */}
             <div>
               <label className="text-sm font-semibold text-slate-700 flex items-center gap-2 mb-2">
@@ -230,7 +230,7 @@ export default function PatientProfilePage() {
                   name="address"
                   value={formData.address}
                   onChange={handleInputChange}
-                  rows="3"
+                  rows="2"
                   className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
                   placeholder="Enter your address"
                 />
@@ -239,6 +239,29 @@ export default function PatientProfilePage() {
                   {profileData?.address || 'Not provided'}
                 </p>
               )}
+            </div>
+
+            {/* Medical History */}
+            <div>
+              <label className="text-sm font-semibold text-slate-700 flex items-center gap-2 mb-2">
+                <UserIcon className="w-4 h-4" />
+                Medical History
+              </label>
+              {editing ? (
+                <textarea
+                  name="medicalHistory"
+                  value={formData.medicalHistory}
+                  onChange={handleInputChange}
+                  rows="3"
+                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                  placeholder="Add any relevant medical history (allergies, conditions, medications, etc.)"
+                />
+              ) : (
+                <p className="text-base text-slate-600 font-medium">
+                  {profileData?.medicalHistory || 'Not provided'}
+                </p>
+              )}
+              {editing && <p className="text-xs text-slate-500 mt-1">Maximum 1000 characters</p>}
             </div>
 
             {/* Action Buttons */}
@@ -254,11 +277,11 @@ export default function PatientProfilePage() {
                   onClick={() => {
                     setEditing(false);
                     setFormData({
-                      fullName: profileData?.fullName || '',
-                      email: profileData?.email || '',
+                      age: profileData?.age || '',
+                      gender: profileData?.gender || '',
                       phone: profileData?.phone || '',
-                      dateOfBirth: profileData?.dateOfBirth || '',
                       address: profileData?.address || '',
+                      medicalHistory: profileData?.medicalHistory || '',
                     });
                   }}
                   className="flex-1 px-4 py-2.5 bg-slate-100 text-slate-700 rounded-lg font-semibold hover:bg-slate-200 transition-all"

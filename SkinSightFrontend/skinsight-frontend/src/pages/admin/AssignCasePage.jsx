@@ -197,7 +197,14 @@ export default function AssignCasePage() {
                     name="doctor"
                     value={doctor.userId}
                     checked={selectedDoctor?.userId === doctor.userId}
-                    onChange={() => setSelectedDoctor(doctor)}
+                    onChange={() => {
+                      // Allow deselection by clicking the same radio button
+                      if (selectedDoctor?.userId === doctor.userId) {
+                        setSelectedDoctor(null);
+                      } else {
+                        setSelectedDoctor(doctor);
+                      }
+                    }}
                     className="w-4 h-4 mt-1 flex-shrink-0"
                   />
                   <div className="flex-1 min-w-0">

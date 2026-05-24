@@ -10,6 +10,7 @@ import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 import ResetPasswordPage from './pages/auth/ResetPasswordPage';
+import VerifyEmailPage from './pages/auth/VerifyEmailPage';
 import PatientDashboard from './pages/patient/PatientDashboard';
 import PatientCasesListPage from './pages/patient/PatientCasesListPage';
 import PatientNotificationsPage from './pages/patient/PatientNotificationsPage';
@@ -17,13 +18,17 @@ import PatientProfilePage from './pages/patient/PatientProfilePage';
 import SubmitCasePage from './pages/patient/SubmitCasePage';
 import CaseDetailPage from './pages/patient/CaseDetailPage';
 import DoctorDashboard from './pages/doctor/DoctorDashboard';
+import DoctorAssignedCasesPage from './pages/doctor/DoctorAssignedCasesPage';
+import DoctorCasesHistoryPage from './pages/doctor/DoctorCasesHistoryPage';
 import DoctorProfilePage from './pages/doctor/DoctorProfilePage';
 import ReviewCasePage from './pages/doctor/ReviewCasePage';
+import DoctorNotificationsPage from './pages/doctor/DoctorNotificationsPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminAllCasesPage from './pages/admin/AdminAllCasesPage';
 import ManageUsersPage from './pages/admin/ManageUsersPage';
 import AssignCasePage from './pages/admin/AssignCasePage';
 import AdminAuditLogsPage from './pages/admin/AdminAuditLogsPage';
+import AdminNotificationsPage from './pages/admin/AdminNotificationsPage';
 
 // Layout wrapper for dashboard pages
 function DashboardLayoutOutlet({ title = 'Dashboard' }) {
@@ -52,6 +57,7 @@ export default function App() {
         <Routes>
           {/* Public */}
           <Route path="/" element={<LandingPage />} />
+          <Route path="/verify" element={<VerifyEmailPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
@@ -82,6 +88,9 @@ export default function App() {
             }
           >
             <Route path="/doctor" element={<DoctorDashboard />} />
+            <Route path="/doctor/assigned-cases" element={<DoctorAssignedCasesPage />} />
+            <Route path="/doctor/cases-history" element={<DoctorCasesHistoryPage />} />
+            <Route path="/doctor/notifications" element={<DoctorNotificationsPage />} />
             <Route path="/doctor/cases/:id" element={<ReviewCasePage />} />
             <Route path="/doctor/profile" element={<DoctorProfilePage />} />
           </Route>
@@ -95,6 +104,7 @@ export default function App() {
             }
           >
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/notifications" element={<AdminNotificationsPage />} />
             <Route path="/admin/users" element={<ManageUsersPage />} />
             <Route path="/admin/cases/:id" element={<AssignCasePage />} />
             <Route path="/admin/all-cases" element={<AdminAllCasesPage />} />

@@ -1,8 +1,7 @@
 package com.Backend.SkinSight.service.auth;
 
 import com.Backend.SkinSight.dto.request.*;
-import com.Backend.SkinSight.dto.response.AuthResponseDto;
-import com.Backend.SkinSight.dto.response.UserResponseDto;
+import com.Backend.SkinSight.dto.response.*;
 
 public interface AuthService {
     void register(RegisterRequestDto dto ) ;

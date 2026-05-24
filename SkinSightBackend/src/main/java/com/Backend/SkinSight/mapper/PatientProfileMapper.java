@@ -19,7 +19,9 @@ public class PatientProfileMapper {
                 .age(profile.getAge())
                 .gender(profile.getGender())
                 .phone(profile.getPhone())
+                .address(profile.getAddress())
                 .medicalHistory(profile.getMedicalHistory())
+                .createdAt(profile.getUser().getCreatedAt())
                 .build();
     }
 

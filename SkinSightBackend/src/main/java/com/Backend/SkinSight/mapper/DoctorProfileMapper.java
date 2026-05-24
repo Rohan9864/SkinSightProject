@@ -22,7 +22,8 @@ public class DoctorProfileMapper {
                 .licenseNumber(profile.getLicenseNumber())
                 .phone(profile.getPhone())
                 .hospitalAffiliation(profile.getHospitalAffiliation())
-                .yearsOfExperience((profile.getYearsOfExperience()))
+                .yearsOfExperience(profile.getYearsOfExperience())
+                .createdAt(profile.getUser().getCreatedAt())
                 .build();
     }
 }

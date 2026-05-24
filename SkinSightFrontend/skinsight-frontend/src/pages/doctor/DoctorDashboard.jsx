@@ -7,9 +7,7 @@ import {
 } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
 import StatCard from '../../components/common/StatCard';
-import DataTable from '../../components/common/DataTable';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
-import StatusBadge from '../../components/common/StatusBadge';
 import api from '../../api/axios';
 import {
   PieChart,
@@ -72,81 +70,6 @@ export default function DoctorDashboard() {
     { name: 'Severe', value: severityDistribution['SEVERE'] || 0, fill: '#ef4444' },
   ].filter((item) => item.value > 0);
 
-  // Table columns
-  const caseColumns = [
-    {
-      key: 'patientName',
-      label: 'Patient Name',
-      width: '20%',
-    },
-    {
-      key: 'bodyArea',
-      label: 'Body Area',
-      width: '15%',
-    },
-    {
-      key: 'diagnosisResult',
-      label: 'AI Prediction',
-      width: '20%',
-      render: (value) =>
-        value?.predictedClass ? (
-          <span className="text-sm font-semibold text-slate-700">
-            {value.predictedClass}
-          </span>
-        ) : (
-          <span className="text-xs text-slate-500">Pending</span>
-        ),
-    },
-    {
-      key: 'diagnosisResult',
-      label: 'Severity',
-      width: '15%',
-      render: (value) => {
-        if (!value?.severityLevel) return <span className="text-xs text-slate-500">-</span>;
-        const colors = {
-          MILD: 'bg-emerald-100 text-emerald-700',
-          MODERATE: 'bg-amber-100 text-amber-700',
-          SEVERE: 'bg-rose-100 text-rose-700',
-        };
-        return (
-          <span
-            className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
-              colors[value.severityLevel]
-            }`}
-          >
-            {value.severityLevel}
-          </span>
-        );
-      },
-    },
-    {
-      key: 'submittedAt',
-      label: 'Assigned Date',
-      width: '15%',
-      render: (value) =>
-        new Date(value).toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-        }),
-    },
-    {
-      key: 'id',
-      label: 'Action',
-      width: '15%',
-      render: (value, row) => (
-        <button
-          onClick={() => navigate(`/doctor/cases/${value}`)}
-          disabled={row.status !== 'UNDER_REVIEW'}
-          className="px-3 py-1.5 bg-sky-500 text-white rounded-lg text-sm font-semibold hover:bg-sky-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {row.status === 'UNDER_REVIEW' ? 'Review' : 'View'}
-        </button>
-      ),
-    },
-  ];
-
-  const underReviewCases = cases.filter((c) => c.status === 'UNDER_REVIEW');
-
   return (
       <div className="space-y-6">
         {/* ROW 1: Stat Cards */}
@@ -177,24 +100,49 @@ export default function DoctorDashboard() {
           />
         </div>
 
-        {/* ROW 2: Main Cases Table */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-6">
-          <h2 className="text-lg font-semibold text-slate-800 mb-4">
-            Assigned Cases
-          </h2>
-          {underReviewCases.length > 0 ? (
-            <DataTable
-              columns={caseColumns}
-              data={underReviewCases}
-              searchableFields={['patientName', 'bodyArea']}
-              paginated={true}
-              pageSize={10}
-            />
-          ) : (
-            <div className="text-center py-12">
-              <p className="text-slate-500">No cases assigned yet.</p>
+        {/* ROW 2: Quick Access Buttons */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <button
+            onClick={() => navigate('/doctor/assigned-cases')}
+            className="bg-white rounded-2xl border border-slate-200 p-8 hover:shadow-lg hover:border-sky-300 transition-all text-left group"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <ClipboardDocumentCheckIcon className="w-8 h-8 text-sky-600 group-hover:scale-110 transition-transform" />
+              <span className="text-2xl font-bold text-sky-600">{pendingReview}</span>
             </div>
-          )}
+            <h3 className="text-lg font-semibold text-slate-800 mb-2">
+              Assigned Cases
+            </h3>
+            <p className="text-sm text-slate-600">
+              Review {pendingReview} case{pendingReview !== 1 ? 's' : ''} awaiting your review
+            </p>
+            <p className="text-xs text-sky-600 font-semibold mt-4 group-hover:translate-x-1 transition-transform">
+              View all cases →
+            </p>
+          </button>
+
+          <button
+            onClick={() => navigate('/doctor/cases-history')}
+            className="bg-white rounded-2xl border border-slate-200 p-8 hover:shadow-lg hover:border-emerald-300 transition-all text-left group"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <CheckCircleIcon className="w-8 h-8 text-emerald-600 group-hover:scale-110 transition-transform" />
+              <span className="text-2xl font-bold text-emerald-600">
+                {cases.filter((c) => c.status === 'RELEASED').length}
+              </span>
+            </div>
+            <h3 className="text-lg font-semibold text-slate-800 mb-2">
+              Cases History
+            </h3>
+            <p className="text-sm text-slate-600">
+              View {cases.filter((c) => c.status === 'RELEASED').length} completed case{
+                cases.filter((c) => c.status === 'RELEASED').length !== 1 ? 's' : ''
+              }
+            </p>
+            <p className="text-xs text-emerald-600 font-semibold mt-4 group-hover:translate-x-1 transition-transform">
+              View history →
+            </p>
+          </button>
         </div>
 
         {/* ROW 3: Recent Activity + Severity Distribution */}

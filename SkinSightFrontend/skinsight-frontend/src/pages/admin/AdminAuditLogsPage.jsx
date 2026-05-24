@@ -130,16 +130,20 @@ export default function AdminAuditLogsPage() {
                         </p>
                       </div>
                       <p className="text-xs text-slate-500 flex-shrink-0">
-                        {new Date(log.timestamp || log.createdAt).toLocaleDateString(
-                          'en-US',
-                          {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            second: '2-digit',
-                          }
+                        {log.timestamp || log.createdAt ? (
+                          new Date(log.timestamp || log.createdAt).toLocaleDateString(
+                            'en-US',
+                            {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              second: '2-digit',
+                            }
+                          )
+                        ) : (
+                          'Invalid date'
                         )}
                       </p>
                     </div>

@@ -169,16 +169,10 @@ export default function LoginPage() {
 
             {/* Password */}
             <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-sm font-semibold text-slate-700">
-                  Password
-                </label>
-                <Link to="/forgot-password"
-                  className="text-xs text-sky-600 hover:text-sky-700
-                    font-medium transition-colors">
-                  Forgot password?
-                </Link>
-              </div>
+              <label className="block text-sm font-semibold
+                text-slate-700 mb-1.5">
+                Password
+              </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5
                   flex items-center pointer-events-none">

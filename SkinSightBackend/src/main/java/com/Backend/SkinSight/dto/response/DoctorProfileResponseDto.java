@@ -2,6 +2,8 @@ package com.Backend.SkinSight.dto.response;
 
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -25,5 +27,7 @@ public class DoctorProfileResponseDto {
     private String hospitalAffiliation;
 
     private Integer yearsOfExperience;
+
+    private LocalDateTime createdAt;
 
 }

@@ -97,6 +97,29 @@ public class EmailService {
         mailSender.send(message);
     }
 
+    public void sendCaseAssignmentEmail(String toEmail,
+                                        String name,
+                                        Long caseId){
+        String loginLink = baseUrl + "/doctor";
+
+        SimpleMailMessage message = new SimpleMailMessage();
+
+        message.setTo(toEmail);
+        message.setSubject("New case assigned to you — SkinSight");
+        message.setText(
+                "Hello Dr. " + name + ",\n\n"
+                        + "A new case has been assigned to you in SkinSight. "
+                        + "Please review Case #" + caseId + " as soon as possible.\n\n"
+                        + "Log in to your doctor dashboard to view the case:\n\n"
+                        + loginLink + "\n\n"
+                        + "Thank you for your prompt attention.\n\n"
+                        + "Regards,\n"
+                        + "SkinSight Team"
+        );
+
+        mailSender.send(message);
+    }
+
     public void sendResultReadyEmail(String toEmail,
                                      String name,
                                      Long caseId){

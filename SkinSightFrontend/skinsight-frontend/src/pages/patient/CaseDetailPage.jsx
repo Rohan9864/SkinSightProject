@@ -413,11 +413,11 @@ export default function CaseDetailPage() {
             </div>
 
             <button
-              onClick={() => navigate('/patient/submit')}
+              onClick={() => navigate(`/patient/cases/${caseData.id}/resubmit`)}
               className="w-full px-6 py-3 bg-gradient-to-r from-sky-500 to-cyan-400 text-white rounded-xl font-semibold shadow hover:-translate-y-1 transition-all flex items-center justify-center gap-2"
             >
               <DocumentArrowUpIcon className="w-5 h-5" />
-              Submit New Case
+              Upload New Image for This Case
             </button>
           </div>
         )}

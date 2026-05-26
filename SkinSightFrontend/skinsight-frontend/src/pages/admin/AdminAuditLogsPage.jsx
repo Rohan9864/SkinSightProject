@@ -130,8 +130,8 @@ export default function AdminAuditLogsPage() {
                         </p>
                       </div>
                       <p className="text-xs text-slate-500 flex-shrink-0">
-                        {log.timestamp || log.createdAt ? (
-                          new Date(log.timestamp || log.createdAt).toLocaleDateString(
+                        {log.performedAt || log.timestamp || log.createdAt ? (
+                          new Date(log.performedAt || log.timestamp || log.createdAt).toLocaleDateString(
                             'en-US',
                             {
                               year: 'numeric',

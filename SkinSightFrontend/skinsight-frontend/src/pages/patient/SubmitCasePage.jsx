@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   DocumentArrowUpIcon,
   CheckCircleIcon,
@@ -13,10 +13,12 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/png'];
 
 export default function SubmitCasePage() {
+  const { id: caseId } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState(null);
+  const [caseData, setCaseData] = useState(null);
   const [formData, setFormData] = useState({
     bodyArea: '',
     description: '',
@@ -72,48 +74,84 @@ export default function SubmitCasePage() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  useEffect(() => {
+    if (!caseId) return;
+
+    const fetchCase = async () => {
+      try {
+        const response = await api.get(`/api/cases/${caseId}`);
+        const caseInfo = response.data;
+        setCaseData(caseInfo);
+        setFormData({
+          bodyArea: caseInfo.bodyArea || '',
+          description: caseInfo.description || '',
+          duration: caseInfo.duration || '',
+        });
+      } catch (error) {
+        toast.error(error.response?.data?.message || 'Failed to load case details');
+        navigate('/patient');
+      }
+    };
+
+    fetchCase();
+  }, [caseId, navigate]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validation
     if (!image) {
       toast.error('Please upload an image');
       return;
     }
-    if (!formData.bodyArea.trim()) {
-      toast.error('Please specify the body area');
-      return;
-    }
-    if (!formData.description.trim()) {
-      toast.error('Please provide a description');
-      return;
-    }
-    if (!formData.duration.trim()) {
-      toast.error('Please specify the duration');
-      return;
+
+    if (!caseId) {
+      if (!formData.bodyArea.trim()) {
+        toast.error('Please specify the body area');
+        return;
+      }
+      if (!formData.description.trim()) {
+        toast.error('Please provide a description');
+        return;
+      }
+      if (!formData.duration.trim()) {
+        toast.error('Please specify the duration');
+        return;
+      }
     }
 
     try {
       setLoading(true);
 
-      // Create FormData for multipart upload
       const uploadData = new FormData();
       uploadData.append('image', image);
-      uploadData.append('bodyArea', formData.bodyArea);
-      uploadData.append('description', formData.description);
-      uploadData.append('duration', formData.duration);
 
-      const response = await api.post('/api/cases', uploadData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      let response;
+      if (caseId) {
+        response = await api.patch(`/api/cases/${caseId}/resubmit`, uploadData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+      } else {
+        uploadData.append('bodyArea', formData.bodyArea);
+        uploadData.append('description', formData.description);
+        uploadData.append('duration', formData.duration);
 
-      toast.success('Case submitted successfully! Your case is being analyzed by AI.');
-      
-      // Wait a moment then navigate
+        response = await api.post('/api/cases', uploadData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+      }
+
+      toast.success(
+        caseId
+          ? 'New image uploaded successfully! We are reprocessing your case.'
+          : 'Case submitted successfully! Your case is being analyzed by AI.'
+      );
+
       setTimeout(() => {
-        navigate('/patient');
+        navigate(caseId ? `/patient/cases/${caseId}` : '/patient');
       }, 1500);
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to submit case');
@@ -194,7 +232,7 @@ export default function SubmitCasePage() {
             {/* Body Area */}
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Body Area <span className="text-rose-500">*</span>
+                Body Area {caseId ? null : <span className="text-rose-500">*</span>}
               </label>
               <input
                 type="text"
@@ -202,14 +240,17 @@ export default function SubmitCasePage() {
                 value={formData.bodyArea}
                 onChange={handleInputChange}
                 placeholder="e.g. Left arm, Back, Face"
-                className="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-sky-400 focus:ring-1 focus:ring-sky-400 outline-none transition-all text-sm"
+                readOnly={Boolean(caseId)}
+                className={`w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-sky-400 focus:ring-1 focus:ring-sky-400 outline-none transition-all text-sm ${
+                  caseId ? 'bg-slate-100 cursor-not-allowed' : ''
+                }`}
               />
             </div>
 
             {/* Description */}
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Description <span className="text-rose-500">*</span>
+                Description {caseId ? null : <span className="text-rose-500">*</span>}
               </label>
               <textarea
                 name="description"
@@ -217,7 +258,10 @@ export default function SubmitCasePage() {
                 onChange={handleInputChange}
                 placeholder="Describe the lesion — color, texture, changes..."
                 rows={5}
-                className="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-sky-400 focus:ring-1 focus:ring-sky-400 outline-none transition-all text-sm resize-none"
+                readOnly={Boolean(caseId)}
+                className={`w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-sky-400 focus:ring-1 focus:ring-sky-400 outline-none transition-all text-sm resize-none ${
+                  caseId ? 'bg-slate-100 cursor-not-allowed' : ''
+                }`}
               />
               <div className="flex justify-between items-center mt-2">
                 <p className="text-xs text-slate-500">
@@ -232,7 +276,7 @@ export default function SubmitCasePage() {
             {/* Duration */}
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Duration <span className="text-rose-500">*</span>
+                Duration {caseId ? null : <span className="text-rose-500">*</span>}
               </label>
               <input
                 type="text"
@@ -240,7 +284,10 @@ export default function SubmitCasePage() {
                 value={formData.duration}
                 onChange={handleInputChange}
                 placeholder="e.g. 2 weeks, 3 months"
-                className="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-sky-400 focus:ring-1 focus:ring-sky-400 outline-none transition-all text-sm"
+                readOnly={Boolean(caseId)}
+                className={`w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-sky-400 focus:ring-1 focus:ring-sky-400 outline-none transition-all text-sm ${
+                  caseId ? 'bg-slate-100 cursor-not-allowed' : ''
+                }`}
               />
             </div>
 

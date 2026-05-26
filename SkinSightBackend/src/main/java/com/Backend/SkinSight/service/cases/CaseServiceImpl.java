@@ -7,6 +7,7 @@ import com.Backend.SkinSight.entity.Case;
 import com.Backend.SkinSight.entity.User;
 import com.Backend.SkinSight.enums.AuditAction;
 import com.Backend.SkinSight.enums.CaseStatus;
+import com.Backend.SkinSight.enums.NotificationType;
 import com.Backend.SkinSight.enums.Role;
 import com.Backend.SkinSight.event.CaseCreatedEvent;
 import com.Backend.SkinSight.exception.BadRequestException;
@@ -14,10 +15,14 @@ import com.Backend.SkinSight.exception.ResourceNotFoundException;
 import com.Backend.SkinSight.exception.UnauthorizedException;
 import com.Backend.SkinSight.mapper.CaseMapper;
 import com.Backend.SkinSight.repository.CaseRepository;
+import com.Backend.SkinSight.repository.DiagnosisResultRepository;
+import com.Backend.SkinSight.repository.DoctorReviewRepository;
 import com.Backend.SkinSight.repository.UserRepository;
+import com.Backend.SkinSight.service.EmailService;
 import com.Backend.SkinSight.service.audit.AuditLogService;
 import com.Backend.SkinSight.service.diagnosis.DiagnosisResultService;
 import com.Backend.SkinSight.service.file.FileStorageService;
+import com.Backend.SkinSight.service.notification.NotificationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -51,8 +56,19 @@ public class CaseServiceImpl implements CaseService{
     private AuditLogService auditLogService;
 
     @Autowired
+    private NotificationService notificationService;
+
+    @Autowired
+    private EmailService emailService;
+
+    @Autowired
     private ApplicationEventPublisher eventPublisher;
 
+    @Autowired
+    private DiagnosisResultRepository diagnosisResultRepository;
+
+    @Autowired
+    private DoctorReviewRepository doctorReviewRepository;
     @Override
     public CaseResponseDto createCase(Long patientId, MultipartFile image, CreateCaseRequestDto dto) {
         User patient = userRepository.findById(patientId).orElseThrow(()->
@@ -189,11 +205,55 @@ public class CaseServiceImpl implements CaseService{
                 + " assigned to "+ doctor.getName()
                 + "( ID : " + doctorId + ")");
 
+        notificationService.sendNotification(
+                doctor.getId(),
+                NotificationType.CASE_ASSIGNED,
+                "A new case (#" + caseId + ") has been assigned to you.",
+                caseId);
+
+        emailService.sendCaseAssignmentEmail(
+                doctor.getEmail(),
+                doctor.getName(),
+                caseId);
+
         return caseMapper.toDto(skinCase);
     }
 
-    @Override
-    public List<CaseResponseDto> getMyAssignedCases(Long doctorId) {
+    @Override    public CaseResponseDto resubmitCase(Long patientId, Long caseId, MultipartFile image) {
+        Case skinCase = caseRepository.findById(caseId).orElseThrow(() ->
+                new ResourceNotFoundException("Case not found with id: " + caseId));
+
+        if (!skinCase.getPatient().getId().equals(patientId)) {
+            throw new BadRequestException("You are not authorized to resubmit this case.");
+        }
+
+        if (skinCase.getStatus() != CaseStatus.RESUBMISSION_REQUIRED) {
+            throw new BadRequestException("This case is not marked for resubmission.");
+        }
+
+        FileUploadResponseDto uploadedFile = fileStorageService.storeCaseImage(image, patientId);
+
+        // Remove old media and previous review state so the case can restart
+        fileStorageService.deleteFile(skinCase.getImageUrl());
+        if (skinCase.getDiagnosisResult() != null) {
+            diagnosisResultRepository.delete(skinCase.getDiagnosisResult());
+            skinCase.setDiagnosisResult(null);
+        }
+        if (skinCase.getDoctorReview() != null) {
+            doctorReviewRepository.delete(skinCase.getDoctorReview());
+            skinCase.setDoctorReview(null);
+        }
+
+        skinCase.setImageUrl(uploadedFile.getFilePath());
+        skinCase.setStatus(CaseStatus.PENDING);
+        caseRepository.save(skinCase);
+
+        eventPublisher.publishEvent(new CaseCreatedEvent(this, caseId, skinCase.getImageUrl()));
+
+        return caseMapper.toDto(skinCase);
+    }
+
+    @Override    public List<CaseResponseDto> getMyAssignedCases(Long doctorId) {
         List<Case> cases = caseRepository.findByAssignedDoctorId(doctorId);
 
         return cases.stream()

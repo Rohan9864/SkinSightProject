@@ -17,6 +17,11 @@ export default function ManageUsersPage() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    licenseNumber: '',
+    phone: '',
+    specialization: 'Dermatology',
+    yearsOfExperience: '',
+    hospitalAffiliation: '',
   });
 
   useEffect(() => {
@@ -71,6 +76,10 @@ export default function ManageUsersPage() {
       toast.error('Email is required');
       return;
     }
+    if (!formData.licenseNumber.trim()) {
+      toast.error('License Number is required');
+      return;
+    }
 
     try {
       setCreatingDoctor(true);
@@ -78,8 +87,11 @@ export default function ManageUsersPage() {
       await api.post('/api/auth/create-doctor', {
         name: formData.name,
         email: formData.email,
-        specialization: 'Dermatology', // Hardcoded for skin disease system
-        licenseNumber: '', // Optional field
+        licenseNumber: formData.licenseNumber,
+        phone: formData.phone || '',
+        specialization: formData.specialization,
+        yearsOfExperience: formData.yearsOfExperience ? parseInt(formData.yearsOfExperience) : null,
+        hospitalAffiliation: formData.hospitalAffiliation || '',
       });
 
       toast.success('Doctor account created. Login credentials sent by email.');
@@ -87,6 +99,11 @@ export default function ManageUsersPage() {
       setFormData({
         name: '',
         email: '',
+        licenseNumber: '',
+        phone: '',
+        specialization: 'Dermatology',
+        yearsOfExperience: '',
+        hospitalAffiliation: '',
       });
       fetchUsers();
     } catch (error) {
@@ -128,7 +145,7 @@ export default function ManageUsersPage() {
         }),
     },
     {
-      key: 'isActive',
+      key: 'active',
       label: 'Status',
       width: '15%',
       render: (value) => {
@@ -152,10 +169,10 @@ export default function ManageUsersPage() {
       width: '10%',
       render: (value, row) => (
         <button
-          onClick={() => handleToggleStatus(value, row.isActive)}
+          onClick={() => handleToggleStatus(value, row.active)}
           className="px-3 py-1 text-xs font-semibold rounded-lg border border-slate-200 hover:bg-slate-100 transition-all"
         >
-          {row.isActive ? 'Deactivate' : 'Activate'}
+          {row.active ? 'Deactivate' : 'Activate'}
         </button>
       ),
     },
@@ -191,7 +208,7 @@ export default function ManageUsersPage() {
       render: (value) => value || <span className="text-slate-400">-</span>,
     },
     {
-      key: 'isActive',
+      key: 'active',
       label: 'Status',
       width: '14%',
       render: (value) => {
@@ -215,10 +232,10 @@ export default function ManageUsersPage() {
       width: '14%',
       render: (value, row) => (
         <button
-          onClick={() => handleToggleStatus(value, row.isActive)}
+          onClick={() => handleToggleStatus(value, row.active)}
           className="px-3 py-1 text-xs font-semibold rounded-lg border border-slate-200 hover:bg-slate-100 transition-all"
         >
-          {row.isActive ? 'Deactivate' : 'Activate'}
+          {row.active ? 'Deactivate' : 'Activate'}
         </button>
       ),
     },
@@ -340,6 +357,83 @@ export default function ManageUsersPage() {
             />
           </div>
 
+          {/* License Number */}
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-2">
+              License Number <span className="text-rose-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="licenseNumber"
+              value={formData.licenseNumber}
+              onChange={handleInputChange}
+              placeholder="DM123456"
+              className="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-sky-400 focus:ring-1 focus:ring-sky-400 outline-none transition-all text-sm"
+            />
+          </div>
+
+          {/* Phone Number */}
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-2">
+              Phone Number
+            </label>
+            <input
+              type="tel"
+              name="phone"
+              value={formData.phone}
+              onChange={handleInputChange}
+              placeholder="+1-555-0123"
+              className="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-sky-400 focus:ring-1 focus:ring-sky-400 outline-none transition-all text-sm"
+            />
+          </div>
+
+          {/* Specialization */}
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-2">
+              Specialization <span className="text-rose-500">*</span>
+            </label>
+            <select
+              name="specialization"
+              value={formData.specialization}
+              onChange={handleInputChange}
+              className="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-sky-400 focus:ring-1 focus:ring-sky-400 outline-none transition-all text-sm"
+            >
+              <option value="Dermatology">Dermatology</option>
+            </select>
+          </div>
+
+          {/* Years of Experience */}
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-2">
+              Years of Experience
+            </label>
+            <input
+              type="number"
+              name="yearsOfExperience"
+              value={formData.yearsOfExperience}
+              onChange={handleInputChange}
+              placeholder="10"
+              min="0"
+              max="70"
+              className="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-sky-400 focus:ring-1 focus:ring-sky-400 outline-none transition-all text-sm"
+            />
+          </div>
+
+          {/* Hospital Affiliation */}
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-2">
+              Hospital Affiliation
+            </label>
+            <input
+              type="text"
+              name="hospitalAffiliation"
+              value={formData.hospitalAffiliation}
+              onChange={handleInputChange}
+              placeholder="City Medical Center"
+              className="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-sky-400 focus:ring-1 focus:ring-sky-400 outline-none transition-all text-sm"
+            />
+          </div>
+
           {/* Buttons */}
           <div className="flex gap-3 pt-4 border-t border-slate-200">
             <button
@@ -349,6 +443,11 @@ export default function ManageUsersPage() {
                 setFormData({
                   name: '',
                   email: '',
+                  licenseNumber: '',
+                  phone: '',
+                  specialization: 'Dermatology',
+                  yearsOfExperience: '',
+                  hospitalAffiliation: '',
                 });
               }}
               disabled={creatingDoctor}

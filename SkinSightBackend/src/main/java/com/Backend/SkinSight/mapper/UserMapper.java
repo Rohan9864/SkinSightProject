@@ -16,10 +16,10 @@ public class UserMapper {
                 .name(user.getName())
                 .email(user.getEmail())
                 .role(user.getRole().name())
-                .isActive((user.isActive()))
+                .active(user.isActive())
                 .isEmailVerified(user.isEmailVerified())
-                .profileImageUrl((user.getProfileImageUrl()))
-                .createdAt((user.getCreatedAt()))
+                .profileImageUrl(user.getProfileImageUrl())
+                .createdAt(user.getCreatedAt())
                 .build();
     }
 }

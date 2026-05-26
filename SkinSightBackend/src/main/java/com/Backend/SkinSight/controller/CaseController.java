@@ -86,6 +86,16 @@ public class CaseController {
         return ResponseEntity.ok(caseService.getMyAssignedCases(doctorId));
     }
 
+    @PatchMapping("/{id}/resubmit")
+    @PreAuthorize("hasRole('PATIENT')")
+    public ResponseEntity<CaseResponseDto> resubmitCase(
+            @RequestAttribute("userId") Long patientId,
+            @PathVariable Long id,
+            @RequestPart("image") MultipartFile image){
+        CaseResponseDto response = caseService.resubmitCase(patientId,id,image);
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/unassigned")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<CaseResponseDto>>getUnassignedCases(){

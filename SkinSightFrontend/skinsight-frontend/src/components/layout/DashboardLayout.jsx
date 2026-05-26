@@ -307,15 +307,15 @@ export default function DashboardLayout({ children, title = 'Dashboard' }) {
       </div>
 
       {/* LOGOUT CONFIRMATION DIALOG */}
-      {showLogoutConfirm && (
-        <ConfirmDialog
-          title="Sign Out"
-          message="Are you sure you want to sign out? You'll be logged out of your account."
-          onConfirm={confirmLogout}
-          onCancel={() => setShowLogoutConfirm(false)}
-          isDangerous={true}
-        />
-      )}
+      <ConfirmDialog
+        isOpen={showLogoutConfirm}
+        message="Are you sure you want to sign out? You'll be logged out of your account."
+        onConfirm={confirmLogout}
+        onCancel={() => setShowLogoutConfirm(false)}
+        confirmLabel="Sign Out"
+        cancelLabel="Cancel"
+        isDangerous={true}
+      />
     </div>
   );
 }

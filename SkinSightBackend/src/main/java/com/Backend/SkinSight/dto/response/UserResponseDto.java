@@ -20,7 +20,7 @@ public class UserResponseDto {
 
     private String role;
 
-    private boolean isActive;
+    private boolean active;
 
     private boolean isEmailVerified;
 

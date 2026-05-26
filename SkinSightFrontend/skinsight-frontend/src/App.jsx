@@ -74,6 +74,7 @@ export default function App() {
             <Route path="/patient" element={<PatientDashboard />} />
             <Route path="/patient/cases" element={<PatientCasesListPage />} />
             <Route path="/patient/cases/:id" element={<CaseDetailPage />} />
+            <Route path="/patient/cases/:id/resubmit" element={<SubmitCasePage />} />
             <Route path="/patient/notifications" element={<PatientNotificationsPage />} />
             <Route path="/patient/profile" element={<PatientProfilePage />} />
             <Route path="/patient/submit" element={<SubmitCasePage />} />

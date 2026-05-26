@@ -9,6 +9,8 @@ import java.util.List;
 public interface CaseService {
     CaseResponseDto createCase(Long patientId, MultipartFile image, CreateCaseRequestDto dto);
 
+    CaseResponseDto resubmitCase(Long patientId, Long caseId, MultipartFile image);
+
     CaseResponseDto getCaseById(Long caseId, Long requesterId);
 
     List<CaseResponseDto> getMyCases(Long patientId);

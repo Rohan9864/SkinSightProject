@@ -29,6 +29,7 @@ import ManageUsersPage from './pages/admin/ManageUsersPage';
 import AssignCasePage from './pages/admin/AssignCasePage';
 import AdminAuditLogsPage from './pages/admin/AdminAuditLogsPage';
 import AdminNotificationsPage from './pages/admin/AdminNotificationsPage';
+import UserDetailPage from './pages/admin/UserDetailPage';
 
 // Layout wrapper for dashboard pages
 function DashboardLayoutOutlet({ title = 'Dashboard' }) {
@@ -107,6 +108,7 @@ export default function App() {
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/notifications" element={<AdminNotificationsPage />} />
             <Route path="/admin/users" element={<ManageUsersPage />} />
+            <Route path="/admin/users/:id" element={<UserDetailPage />} />
             <Route path="/admin/cases/:id" element={<AssignCasePage />} />
             <Route path="/admin/all-cases" element={<AdminAllCasesPage />} />
             <Route path="/admin/audit-logs" element={<AdminAuditLogsPage />} />

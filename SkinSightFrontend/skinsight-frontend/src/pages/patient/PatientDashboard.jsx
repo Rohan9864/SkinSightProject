@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { DocumentArrowUpIcon } from '@heroicons/react/24/outline';
+import { DocumentArrowUpIcon, ClockIcon, EyeIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
 import StatCard from '../../components/common/StatCard';
 import DataTable from '../../components/common/DataTable';
@@ -61,6 +61,11 @@ export default function PatientDashboard() {
   // Recent cases (last 5)
   const recentCases = cases.slice(0, 5);
 
+  // Latest notifications first
+  const latestNotifications = [...notifications]
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .slice(0, 5);
+
   // Table columns
   const caseColumns = [
     {
@@ -115,19 +120,19 @@ export default function PatientDashboard() {
           <StatCard
             title="Pending"
             value={pendingCount}
-            icon={DocumentArrowUpIcon}
+            icon={ClockIcon}
             color="amber"
           />
           <StatCard
             title="Under Review"
             value={underReviewCount}
-            icon={DocumentArrowUpIcon}
+            icon={EyeIcon}
             color="sky"
           />
           <StatCard
             title="Released"
             value={releasedCount}
-            icon={DocumentArrowUpIcon}
+            icon={CheckCircleIcon}
             color="emerald"
           />
         </div>
@@ -169,22 +174,32 @@ export default function PatientDashboard() {
             {statusDistribution.length > 0 ? (
               <div className="h-80 flex items-center justify-center">
                 <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
+                  <PieChart margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
                     <Pie
                       data={statusDistribution}
                       cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, value }) => `${name}: ${value}`}
-                      outerRadius={100}
-                      fill="#8884d8"
+                      cy="45%"
                       dataKey="value"
+                      nameKey="name"
+                      innerRadius={58}
+                      outerRadius={98}
+                      paddingAngle={4}
+                      cornerRadius={8}
+                      stroke="none"
+                      labelLine={false}
+                      label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
                     >
                       {statusDistribution.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.fill} />
                       ))}
                     </Pie>
                     <Tooltip formatter={(value) => `${value} case${value !== 1 ? 's' : ''}`} />
+                    <Legend
+                      verticalAlign="bottom"
+                      align="center"
+                      iconType="circle"
+                      wrapperStyle={{ paddingTop: 12, fontSize: 12 }}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
@@ -223,7 +238,7 @@ export default function PatientDashboard() {
 
           {notifications.length > 0 ? (
             <div className="space-y-3">
-              {notifications.slice(0, 5).map((notif) => (
+              {latestNotifications.map((notif) => (
                 <div
                   key={notif.id}
                   className="flex items-start gap-4 p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"

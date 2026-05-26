@@ -43,16 +43,20 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         } catch (Exception e){}
 
         if (email!=null && SecurityContextHolder.getContext().getAuthentication()==null){
-            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-            if (jwtUtil.isTokenValid(token,userDetails.getUsername())){
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails,
-                        null,
-                        userDetails.getAuthorities());
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+            try {
+                UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+                if (jwtUtil.isTokenValid(token,userDetails.getUsername())){
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails,
+                            null,
+                            userDetails.getAuthorities());
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
 
-                Long userId = jwtUtil.extractUserId(token);
-                request.setAttribute("userId",userId);
+                    Long userId = jwtUtil.extractUserId(token);
+                    request.setAttribute("userId",userId);
+                }
+            } catch (Exception ignored) {
+                // Ignore invalid or expired token and allow anonymous access
             }
         }
 

@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import Logo from '../components/common/Logo'
+import heroGraphic from '../assets/hero.png'
 
 const FEATURES = [
   {
@@ -75,13 +76,13 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex
           items-center justify-between h-16">
 
-          <div className="flex items-center gap-2.5">
+          <a href="/" className="flex items-center gap-2.5">
             <Logo size="md" />
             <span className={`font-bold text-lg tracking-tight transition-colors
               ${scrolled ? 'text-slate-800' : 'text-white'}`}>
               SkinSight
             </span>
-          </div>
+          </a>
 
           <div className="hidden md:flex items-center gap-8">
             {['Features','How It Works','About'].map(item => (
@@ -216,34 +217,14 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Featured SkinSight Logo */}
+            {/* Featured SkinSight Graphic */}
             <div className="hidden lg:flex items-center justify-center">
-              <div className="relative flex flex-col items-center justify-center">
-                {/* Main Logo - Featured Prominently */}
-                <Logo size="2xl" animated={true} />
-                
-                {/* Animated glow effect */}
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="w-80 h-80 rounded-full bg-gradient-to-r from-sky-500/10 to-cyan-400/10 blur-3xl animate-pulse"/>
-                </div>
-
-                {/* Process flow indicators */}
-                <div className="mt-12 flex gap-4 items-center text-sm text-slate-600">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-sky-500"/>
-                    <span>AI Analysis</span>
-                  </div>
-                  <div className="w-6 h-0.5 bg-gradient-to-r from-sky-500 to-transparent"/>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-cyan-500"/>
-                    <span>Doctor Review</span>
-                  </div>
-                  <div className="w-6 h-0.5 bg-gradient-to-r from-cyan-500 to-transparent"/>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-emerald-500"/>
-                    <span>Verified Result</span>
-                  </div>
-                </div>
+              <div className="relative flex items-center justify-center">
+                <img
+                  src={heroGraphic}
+                  alt="SkinSight overview"
+                  className="w-full max-w-3xl rounded-[2rem] shadow-2xl object-cover"
+                />
               </div>
             </div>
           </div>

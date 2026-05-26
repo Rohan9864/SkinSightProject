@@ -44,6 +44,4 @@ public class DiagnosisResult {
     @Column(updatable = false)
     private LocalDateTime createdAt;
 
-
-
 }

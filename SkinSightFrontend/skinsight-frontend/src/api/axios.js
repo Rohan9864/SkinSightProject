@@ -17,11 +17,20 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Handle 401 globally
+// Handle 401 globally, but ignore auth endpoints so login/register
+// can show validation errors instead of refreshing the page.
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const status = error.response?.status;
+    const url = error.config?.url || '';
+
+    const isAuthEndpoint = url.includes('/api/auth/login')
+      || url.includes('/api/auth/register')
+      || url.includes('/api/auth/forgot-password')
+      || url.includes('/api/auth/reset-password');
+
+    if (status === 401 && !isAuthEndpoint) {
       localStorage.clear();
       window.location.href = '/login';
     }

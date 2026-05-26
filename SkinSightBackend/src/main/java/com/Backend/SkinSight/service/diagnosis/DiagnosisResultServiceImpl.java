@@ -64,9 +64,10 @@ public class DiagnosisResultServiceImpl implements DiagnosisResultService{
                 skinCase.getStatus(),
                 skinCase.getImageUrl());
 
-        if (skinCase.getStatus() != CaseStatus.PENDING) {
+        if (skinCase.getStatus() != CaseStatus.PENDING
+                && skinCase.getStatus() != CaseStatus.UNDER_REVIEW) {
             throw new BadRequestException(
-                    "Case is not PENDING. Status: "
+                    "Case is not ready for ML analysis. Status: "
                             + skinCase.getStatus());
         }
 

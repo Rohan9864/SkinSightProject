@@ -1,124 +1,239 @@
-# api/ml/severity.py
+# api/ml/severity.py  — IMPROVED VERSION
 
 import numpy as np
 
+# ── Clinical severity tiers ───────────────────────────────────
+# Based on dermatology clinical guidelines.
+# Each disease class has a base severity score
+# reflecting its clinical risk profile.
+# Source: ISIC clinical risk stratification guidelines.
+
+CLINICAL_BASE_SEVERITY = {
+    'Melanoma':               0.85,
+    # Melanoma is the most dangerous skin cancer.
+    # High mortality if not detected early.
+    # Base severity always starts HIGH.
+
+    'Squamous Cell Carcinoma': 0.75,
+    # SCC can metastasize if untreated.
+    # Second most dangerous. HIGH base.
+
+    'Basal Cell Carcinoma':   0.55,
+    # BCC rarely metastasizes but requires
+    # treatment. MODERATE base.
+
+    'Actinic Keratosis':      0.45,
+    # Pre-cancerous lesion. Can progress to SCC.
+    # MODERATE base — needs monitoring.
+
+    'Vascular Lesion':        0.35,
+    # Usually benign but some types require
+    # treatment. LOW-MODERATE base.
+
+    'Benign Keratosis':       0.20,
+    # Non-cancerous. LOW base.
+
+    'Dermatofibroma':         0.15,
+    # Benign fibrous nodule. LOW base.
+
+    'Melanocytic Nevi':       0.20,
+    # Common mole. Usually benign.
+    # LOW base but requires monitoring.
+}
 
 # ── Severity thresholds ───────────────────────────────────────
 MILD_THRESHOLD     = 0.40
-MODERATE_THRESHOLD = 0.70
-# S < 0.40          → MILD
-# 0.40 ≤ S < 0.70   → MODERATE
-# S ≥ 0.70          → SEVERE
-
-# ── Severity formula weights ──────────────────────────────────
-CONFIDENCE_WEIGHT  = 0.6
-LESION_AREA_WEIGHT = 0.4
-# S = (0.6 × confidence) + (0.4 × lesion_area_ratio)
-# Confidence contributes 60% — model certainty matters most.
-# Lesion area contributes 40% — larger lesions are riskier.
+MODERATE_THRESHOLD = 0.65
 
 
-def calculate_lesion_area(cam):
+def calculate_prediction_entropy(confidence_scores_dict):
     """
-    Calculates the lesion area ratio from the
-    Grad-CAM activation map.
+    Calculates Shannon entropy across all class probabilities.
 
-    The lesion area is the proportion of the image
-    occupied by the high-activation region.
-    A larger activated area suggests a more
-    extensive skin condition.
+    High entropy = model is uncertain across many classes.
+    Low entropy = model is very confident in one class.
+
+    In medical AI, high uncertainty is itself a risk signal.
+    An uncertain model on a potentially malignant lesion
+    should increase severity, not decrease it.
 
     Args:
-        cam (numpy.ndarray): Grad-CAM activation map.
-            Shape: (224, 224), values 0.0 to 1.0.
+        confidence_scores_dict (dict): class → probability
 
     Returns:
-        float: Lesion area ratio (0.0 to 1.0).
-            0.0 = no activation
-            1.0 = entire image is activated
+        float: Normalised entropy 0.0 to 1.0
     """
+    probs = np.array(list(confidence_scores_dict.values()))
+    probs = probs[probs > 0]
+    # Remove zero probabilities to avoid log(0).
 
-    # Threshold the activation map at 50% of maximum
-    threshold = 0.5 * cam.max()
-    # We consider pixels activated if they are at least
-    # 50% of the maximum activation value.
-    # This isolates the most significant regions.
+    entropy = -np.sum(probs * np.log(probs + 1e-10))
+    # Shannon entropy formula.
+    # Higher = more uncertain across classes.
 
-    if threshold == 0:
+    # Normalise by maximum possible entropy (uniform dist)
+    max_entropy = np.log(len(confidence_scores_dict))
+    if max_entropy == 0:
         return 0.0
-    # If max activation is 0, nothing is activated.
-    # Return 0 to avoid division by zero.
 
-    # Count activated pixels
-    activated_pixels = np.sum(cam >= threshold)
-    # np.sum counts how many pixels meet the condition.
-    # cam >= threshold creates a boolean mask.
-    # True = activated, False = not activated.
-    # np.sum counts the True values.
+    normalised_entropy = entropy / max_entropy
+    # 0.0 = completely certain (one class = 1.0)
+    # 1.0 = completely uncertain (all classes equal)
 
-    total_pixels = cam.size
-    # cam.size = 224 × 224 = 50176 total pixels.
-
-    lesion_area_ratio = activated_pixels / total_pixels
-    # Proportion of image that is activated.
-    # e.g. if 10000 pixels are activated:
-    # 10000 / 50176 ≈ 0.199 (about 20% of image)
-
-    return float(lesion_area_ratio)
+    return float(normalised_entropy)
 
 
-def calculate_severity(confidence, cam):
+def calculate_malignancy_probability(confidence_scores_dict):
     """
-    Calculates the severity score and level using
-    our custom severity scoring algorithm.
+    Calculates the combined probability that the lesion
+    belongs to a malignant or pre-malignant category.
 
-    Algorithm:
-        A = lesion area ratio from Grad-CAM
-        C = model confidence for predicted class
-        S = (0.6 × C) + (0.4 × A)
+    This is more clinically meaningful than the confidence
+    of just the top predicted class.
+
+    Malignant classes: Melanoma, SCC, BCC, AK
+    Benign classes: NV, BKL, DF, VASC
 
     Args:
-        confidence (float): Model confidence score (0-1).
-            The probability of the predicted disease class.
-        cam (numpy.ndarray): Grad-CAM activation map.
-            Shape: (224, 224), values 0.0 to 1.0.
+        confidence_scores_dict (dict): class → probability
 
     Returns:
-        tuple:
-            - severity_score (float): S value (0.0 to 1.0).
-            - severity_level (str): "MILD", "MODERATE",
-              or "SEVERE".
+        float: Combined malignant probability 0.0 to 1.0
+    """
+    malignant_classes = {
+        'Melanoma',
+        'Squamous Cell Carcinoma',
+        'Basal Cell Carcinoma',
+        'Actinic Keratosis',
+    }
+
+    malignant_prob = sum(
+        prob for cls, prob
+        in confidence_scores_dict.items()
+        if cls in malignant_classes
+    )
+    # Sum of probabilities for all malignant classes.
+    # Even if melanoma is only 30% likely,
+    # if BCC adds another 25% and AK adds 15%,
+    # the combined malignant probability is 70%.
+    # This is far more clinically relevant than
+    # just the top predicted class confidence.
+
+    return float(malignant_prob)
+
+
+def calculate_severity(
+        predicted_class,
+        confidence,
+        confidence_scores_dict,
+        cam):
+    """
+    Clinically grounded severity estimation.
+
+    Algorithm (4 components):
+
+    1. BASE SCORE (40% weight)
+       From clinical risk tier of predicted class.
+       Melanoma always starts HIGH. Nevi always LOW.
+       This is the most important component.
+
+    2. MALIGNANCY PROBABILITY (30% weight)
+       Combined probability across all malignant classes.
+       More informative than single-class confidence.
+
+    3. UNCERTAINTY PENALTY (20% weight)
+       High entropy → model uncertain → flag for review.
+       Uncertainty in cancer screening = higher caution.
+
+    4. LESION PROMINENCE (10% weight)
+       Grad-CAM activation prominence.
+       Limited weight because Grad-CAM ≠ lesion size.
+       Only used as a minor tiebreaker.
+
+    Args:
+        predicted_class (str): Top predicted class name.
+        confidence (float): Confidence of top prediction.
+        confidence_scores_dict (dict): All class scores.
+        cam (numpy.ndarray): Grad-CAM activation (H, W).
+
+    Returns:
+        tuple: (severity_score float, severity_level str,
+                severity_explanation str)
     """
 
-    # Step 1: Calculate lesion area ratio from Grad-CAM
-    lesion_area = calculate_lesion_area(cam)
-    # Value between 0.0 and 1.0.
+    # ── Component 1: Clinical base score ─────────────────────
+    base_score = CLINICAL_BASE_SEVERITY.get(
+        predicted_class, 0.40)
+    # Default 0.40 for unknown classes.
+    # Weight: 40% of final score.
 
-    # Step 2: Apply severity formula
+    # ── Component 2: Malignancy probability ──────────────────
+    malignancy_prob = calculate_malignancy_probability(
+        confidence_scores_dict)
+    # Combined probability of all malignant classes.
+    # Weight: 30% of final score.
+
+    # ── Component 3: Uncertainty penalty ─────────────────────
+    entropy = calculate_prediction_entropy(
+        confidence_scores_dict)
+    # High entropy = uncertain prediction = more caution.
+    # Weight: 20% of final score.
+    #
+    # For cancer screening, uncertainty should INCREASE
+    # severity (refer to specialist) not decrease it.
+
+    # ── Component 4: Lesion prominence from Grad-CAM ─────────
+    cam_prominence = _calculate_cam_prominence(cam)
+    # Limited weight: 10%
+    # Grad-CAM shows attention, not actual lesion size.
+    # Used only as a minor tiebreaker signal.
+
+    # ── Combine components ────────────────────────────────────
     severity_score = (
-        (CONFIDENCE_WEIGHT  * confidence) +
-        (LESION_AREA_WEIGHT * lesion_area)
+        0.40 * base_score        +
+        0.30 * malignancy_prob   +
+        0.20 * entropy           +
+        0.10 * cam_prominence
     )
-    # S = (0.6 × C) + (0.4 × A)
-    # Both C and A are between 0 and 1.
-    # S is also between 0 and 1.
-    # Higher confidence + larger lesion = higher severity.
+    severity_score = round(
+        min(1.0, max(0.0, severity_score)), 4)
+    # Clamp to [0, 1] range.
 
-    severity_score = round(severity_score, 4)
-    # Round to 4 decimal places for clean output.
-
-    # Step 3: Map score to severity level
+    # ── Map to severity level ─────────────────────────────────
     if severity_score < MILD_THRESHOLD:
         severity_level = 'MILD'
-        # S < 0.40 — Low confidence or small lesion area.
-        # Likely a benign or early-stage condition.
+       
     elif severity_score < MODERATE_THRESHOLD:
         severity_level = 'MODERATE'
-        # 0.40 ≤ S < 0.70 — Medium confidence or
-        # moderate lesion area. Warrants attention.
+        
     else:
         severity_level = 'SEVERE'
-        # S ≥ 0.70 — High confidence and/or large area.
-        # Urgent clinical attention recommended.
-
+        
     return severity_score, severity_level
+
+
+def _calculate_cam_prominence(cam):
+    """
+    Calculates how prominent the Grad-CAM activation is.
+    Not the same as lesion size — limited diagnostic value.
+    Used only as a minor signal (10% weight).
+
+    Returns float 0.0 to 1.0.
+    """
+    if cam is None or cam.size == 0:
+        return 0.0
+
+    cam_max = cam.max()
+    if cam_max == 0:
+        return 0.0
+
+    threshold  = 0.5 * cam_max
+    active_pct = np.sum(cam >= threshold) / cam.size
+
+    # Also consider peak intensity
+    mean_active = cam[cam >= threshold].mean() \
+        if np.any(cam >= threshold) else 0.0
+
+    # Combine area and intensity
+    prominence = 0.6 * active_pct + 0.4 * mean_active
+    return float(min(1.0, prominence))

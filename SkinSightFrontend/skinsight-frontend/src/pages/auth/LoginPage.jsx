@@ -67,7 +67,9 @@ export default function LoginPage() {
         <div className="relative z-10 max-w-md text-center">
           {/* Logo */}
           <div className="flex items-center justify-center gap-3 mb-10">
-            <Logo size="lg" showText={true} theme="dark" className="shadow-lg shadow-sky-500/20 rounded-xl bg-white/5 p-1" />
+            <Link to="/">
+              <Logo size="lg" showText={true} theme="dark" className="shadow-lg shadow-sky-500/20 rounded-xl bg-white/5 p-1" />
+            </Link>
           </div>
 
           <h2 className="text-3xl font-bold text-white mb-4 leading-tight">
@@ -109,7 +111,9 @@ export default function LoginPage() {
 
         {/* Mobile logo */}
         <div className="lg:hidden flex items-center justify-center mb-8">
-          <Logo size="sm" showText={true} className="shadow-lg shadow-sky-500/20 rounded-lg bg-slate-100/90 p-1" />
+          <Link to="/">
+            <Logo size="sm" showText={true} className="shadow-lg shadow-sky-500/20 rounded-lg bg-slate-100/90 p-1" />
+          </Link>
         </div>
 
         <div className="w-full max-w-md">

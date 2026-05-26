@@ -98,22 +98,31 @@ def run_pipeline(case_id, image_url):
     grad_cam.remove_hooks()
     # cam shape: (224, 224) — activation values 0-1
 
+    import json
+    confidence_scores_dict = json.loads(
+    confidence_scores_json)
+
     severity_score, severity_level = \
-        calculate_severity(predicted_confidence, cam)
+    calculate_severity(
+        predicted_class,
+        predicted_confidence,
+        confidence_scores_dict,
+        cam)
     # severity_score: e.g. 0.7342
     # severity_level: e.g. "SEVERE"
 
     # ── Step 6: Return complete result ────────────────────────
     return {
-        'case_id':           case_id,
-        'predicted_class':   predicted_class,
-        'confidence_scores': confidence_scores_json,
-        'heatmap_url':       heatmap_url,
-        'severity_score':    severity_score,
-        'severity_level':    severity_level,
-        'success':           True,
-        'error_message':     None
-    }
+    'case_id':               case_id,
+    'predicted_class':       predicted_class,
+    'confidence_scores':     confidence_scores_json,
+    'heatmap_url':           heatmap_url,
+    'severity_score':        severity_score,
+    'severity_level':        severity_level,
+    # ↑ New field — plain English explanation
+    'success':               True,
+    'error_message':         None,
+}
     # This dict maps directly to MLResponseDto in Spring Boot:
     # predicted_class   → DiagnosisResult.predictedClass
     # confidence_scores → DiagnosisResult.confidenceScores

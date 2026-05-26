@@ -9,13 +9,13 @@ const severityConfig = {
     badge: 'bg-amber-100 text-amber-700',
     icon: '!',
     bar: 'bg-amber-500',
-    message: 'Moderate risk — clinical evaluation advised',
+    message: 'Moderate risk — clinical evaluation advised . Please consult a dermatologist soon',
   },
   SEVERE: {
     badge: 'bg-rose-100 text-rose-700',
     icon: '⚠',
     bar: 'bg-rose-500',
-    message: 'High risk — urgent referral recommended',
+    message: 'High risk — has high clinical Significance — urgent specialist referral is strongly recommended.',
   },
 };
 
@@ -30,6 +30,7 @@ export default function DiagnosisResultCard({ diagnosisResult }) {
 
   const config = severityConfig[diagnosisResult.severityLevel] || severityConfig.MILD;
   const severityPercent = (diagnosisResult.severityScore || 0) * 100;
+  const severityMessage = diagnosisResult.severityExplanation || config.message;
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-6">
@@ -68,7 +69,7 @@ export default function DiagnosisResultCard({ diagnosisResult }) {
         </p>
 
         {/* Severity Message */}
-        <p className="text-sm text-slate-600 italic">{config.message}</p>
+        <p className="text-sm text-slate-600 italic">{severityMessage}</p>
       </div>
     </div>
   );

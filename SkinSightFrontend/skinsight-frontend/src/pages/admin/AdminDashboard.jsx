@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   DocumentArrowUpIcon,
   UsersIcon,
+  UserIcon,
   CheckCircleIcon,
   ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
@@ -22,6 +23,7 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
+  Legend,
   ResponsiveContainer,
 } from 'recharts';
 
@@ -174,7 +176,7 @@ export default function AdminDashboard() {
           <StatCard
             title="Total Doctors"
             value={totalDoctors}
-            icon={UsersIcon}
+            icon={UserIcon}
             color="violet"
           />
           <StatCard
@@ -195,24 +197,32 @@ export default function AdminDashboard() {
             {statusData.length > 0 ? (
               <div className="h-72 flex items-center justify-center">
                 <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
+                  <PieChart margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
                     <Pie
                       data={statusData}
                       cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, value, percent }) =>
-                        `${name}: ${value} (${(percent * 100).toFixed(0)}%)`
-                      }
-                      outerRadius={80}
-                      fill="#8884d8"
+                      cy="45%"
                       dataKey="value"
+                      nameKey="name"
+                      innerRadius={52}
+                      outerRadius={84}
+                      paddingAngle={4}
+                      cornerRadius={8}
+                      stroke="none"
+                      labelLine={false}
+                      label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
                     >
                       {statusData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.fill} />
                       ))}
                     </Pie>
-                    <Tooltip />
+                    <Tooltip formatter={(value) => `${value} case${value !== 1 ? 's' : ''}`} />
+                    <Legend
+                      verticalAlign="bottom"
+                      align="center"
+                      iconType="circle"
+                      wrapperStyle={{ paddingTop: 12, fontSize: 12 }}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
               </div>

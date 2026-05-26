@@ -20,6 +20,12 @@ public class PatientProfileResponseDto {
 
     private String email;
 
+    private boolean isEmailVerified;
+
+    private boolean active;
+
+    private String profileImageUrl;
+
     private Integer age;
 
     private String gender;

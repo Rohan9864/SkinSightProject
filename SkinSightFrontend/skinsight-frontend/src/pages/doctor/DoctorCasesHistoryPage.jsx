@@ -146,27 +146,7 @@ export default function DoctorCasesHistoryPage() {
           <p className="text-2xl font-bold text-emerald-900">{cases.length}</p>
         </div>
 
-        <div className="bg-gradient-to-br from-sky-50 to-sky-100 rounded-xl border border-sky-200 p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <ClipboardDocumentCheckIcon className="w-5 h-5 text-sky-600" />
-            <span className="text-xs font-semibold text-sky-700 uppercase tracking-wide">
-              Avg Processing Time
-            </span>
-          </div>
-          <p className="text-2xl font-bold text-sky-900">
-            {cases.length > 0
-              ? Math.round(
-                  cases.reduce((sum, c) => {
-                    const submitted = new Date(c.submittedAt);
-                    const released = new Date(c.updatedAt);
-                    const days = (released - submitted) / (1000 * 60 * 60 * 24);
-                    return sum + days;
-                  }, 0) / cases.length
-                )
-              : 0}{' '}
-            days
-          </p>
-        </div>
+      
 
         <div className="bg-gradient-to-br from-violet-50 to-violet-100 rounded-xl border border-violet-200 p-4">
           <div className="flex items-center gap-2 mb-2">

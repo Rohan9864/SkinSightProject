@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
+  ArrowPathIcon,
   CheckCircleIcon,
   ClipboardDocumentCheckIcon,
   SparklesIcon,
@@ -14,6 +15,7 @@ import {
   Pie,
   Cell,
   Tooltip,
+  Legend,
   ResponsiveContainer,
 } from 'recharts';
 
@@ -42,8 +44,8 @@ export default function DoctorDashboard() {
   if (loading) return <LoadingSpinner />;
 
   // Calculate stats
-  const totalAssigned = cases.length;
-  const pendingReview = cases.filter((c) => c.status === 'UNDER_REVIEW').length;
+  const reviewableAssigned = cases.filter((c) => c.status === 'UNDER_REVIEW').length;
+  const awaitingResubmission = cases.filter((c) => c.status === 'RESUBMISSION_REQUIRED').length;
 
   const today = new Date().toDateString();
   const completedToday = cases.filter(
@@ -75,15 +77,15 @@ export default function DoctorDashboard() {
         {/* ROW 1: Stat Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard
-            title="Total Assigned"
-            value={totalAssigned}
+            title="Ready to Review"
+            value={reviewableAssigned}
             icon={ClipboardDocumentCheckIcon}
             color="sky"
           />
           <StatCard
-            title="Pending Review"
-            value={pendingReview}
-            icon={ClipboardDocumentCheckIcon}
+            title="Awaiting Resubmission"
+            value={awaitingResubmission}
+            icon={ArrowPathIcon}
             color="amber"
           />
           <StatCard
@@ -108,13 +110,13 @@ export default function DoctorDashboard() {
           >
             <div className="flex items-center justify-between mb-4">
               <ClipboardDocumentCheckIcon className="w-8 h-8 text-sky-600 group-hover:scale-110 transition-transform" />
-              <span className="text-2xl font-bold text-sky-600">{pendingReview}</span>
+              <span className="text-2xl font-bold text-sky-600">{reviewableAssigned}</span>
             </div>
             <h3 className="text-lg font-semibold text-slate-800 mb-2">
               Assigned Cases
             </h3>
             <p className="text-sm text-slate-600">
-              Review {pendingReview} case{pendingReview !== 1 ? 's' : ''} awaiting your review
+              Review {reviewableAssigned} case{reviewableAssigned !== 1 ? 's' : ''} awaiting your review
             </p>
             <p className="text-xs text-sky-600 font-semibold mt-4 group-hover:translate-x-1 transition-transform">
               View all cases →
@@ -156,6 +158,8 @@ export default function DoctorDashboard() {
               <div className="space-y-3">
                 {cases
                   .filter((c) => c.status === 'RELEASED')
+                  .slice()
+                  .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
                   .slice(0, 5)
                   .map((c) => (
                     <div
@@ -206,22 +210,32 @@ export default function DoctorDashboard() {
             {severityChartData.length > 0 ? (
               <div className="h-80 flex items-center justify-center">
                 <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
+                  <PieChart margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
                     <Pie
                       data={severityChartData}
                       cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, value }) => `${name}: ${value}`}
-                      outerRadius={100}
-                      fill="#8884d8"
+                      cy="45%"
                       dataKey="value"
+                      nameKey="name"
+                      innerRadius={56}
+                      outerRadius={96}
+                      paddingAngle={4}
+                      cornerRadius={8}
+                      stroke="none"
+                      labelLine={false}
+                      label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
                     >
                       {severityChartData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.fill} />
                       ))}
                     </Pie>
-                    <Tooltip />
+                    <Tooltip formatter={(value) => `${value} case${value !== 1 ? 's' : ''}`} />
+                    <Legend
+                      verticalAlign="bottom"
+                      align="center"
+                      iconType="circle"
+                      wrapperStyle={{ paddingTop: 12, fontSize: 12 }}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
               </div>

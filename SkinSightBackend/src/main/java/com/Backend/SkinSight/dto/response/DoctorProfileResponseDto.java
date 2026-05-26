@@ -18,6 +18,12 @@ public class DoctorProfileResponseDto {
 
     private String email;
 
+    private boolean isEmailVerified;
+
+    private boolean active;
+
+    private String profileImageUrl;
+
     private String specialization;
 
     private String licenseNumber;

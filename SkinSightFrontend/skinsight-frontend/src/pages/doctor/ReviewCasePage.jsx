@@ -218,6 +218,7 @@ export default function ReviewCasePage() {
     : `http://localhost:8080/${diagnosis?.heatmapUrl}`;
 
   const isReleased = caseData.status === 'RELEASED';
+  const isResubmissionRequired = caseData.status === 'RESUBMISSION_REQUIRED';
 
   return (
     <>
@@ -310,6 +311,13 @@ export default function ReviewCasePage() {
                   >
                     {reportLoading ? 'Preparing Report...' : 'Download Report'}
                   </button>
+                </div>
+              ) : isResubmissionRequired ? (
+                <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6">
+                  <p className="text-lg font-semibold text-rose-800">Resubmission Required</p>
+                  <p className="mt-2 text-sm text-rose-700">
+                    Patient has been asked to resubmit the image for Case #{caseData.id}. You will be able to review again once the new image is uploaded.
+                  </p>
                 </div>
               ) : (
                 <>

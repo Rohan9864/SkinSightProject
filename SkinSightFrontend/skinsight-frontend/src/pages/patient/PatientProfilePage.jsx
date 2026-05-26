@@ -10,7 +10,11 @@ export default function PatientProfilePage() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
+  const [userData, setUserData] = useState(null);
   const [profileData, setProfileData] = useState(null);
+  const emailVerified =
+    userData?.isEmailVerified ?? userData?.emailVerified ??
+    profileData?.isEmailVerified ?? profileData?.emailVerified;
   const [formData, setFormData] = useState({
     age: '',
     gender: '',
@@ -31,14 +35,18 @@ export default function PatientProfilePage() {
   const fetchProfile = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/api/profiles/patient/me');
-      setProfileData(response.data);
+      const [userRes, profileRes] = await Promise.all([
+        api.get('/api/users/me'),
+        api.get('/api/profiles/patient/me'),
+      ]);
+      setUserData(userRes.data);
+      setProfileData(profileRes.data);
       setFormData({
-        age: response.data.age || '',
-        gender: response.data.gender || '',
-        phone: response.data.phone || '',
-        address: response.data.address || '',
-        medicalHistory: response.data.medicalHistory || '',
+        age: profileRes.data.age || '',
+        gender: profileRes.data.gender || '',
+        phone: profileRes.data.phone || '',
+        address: profileRes.data.address || '',
+        medicalHistory: profileRes.data.medicalHistory || '',
       });
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to load profile');
@@ -147,6 +155,34 @@ export default function PatientProfilePage() {
                 {profileData?.email || 'Not available'}
               </p>
             </div>
+
+            {/* Email Verified */}
+            <div>
+              <label className="text-sm font-semibold text-slate-700 flex items-center gap-2 mb-2">
+                <LockClosedIcon className="w-4 h-4" />
+                Email Verified
+              </label>
+              <p className="text-base text-slate-600 font-medium">
+                {emailVerified ? 'Yes' : 'No'}
+              </p>
+            </div>
+
+            {/* Joined */}
+            {profileData?.createdAt && (
+              <div>
+                <label className="text-sm font-semibold text-slate-700 flex items-center gap-2 mb-2">
+                  <CalendarIcon className="w-4 h-4" />
+                  Joined
+                </label>
+                <p className="text-base text-slate-600 font-medium">
+                  {new Date(profileData.createdAt).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })}
+                </p>
+              </div>
+            )}
 
             {/* Age */}
             <div>

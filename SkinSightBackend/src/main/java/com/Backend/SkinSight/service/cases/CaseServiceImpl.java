@@ -245,7 +245,11 @@ public class CaseServiceImpl implements CaseService{
         }
 
         skinCase.setImageUrl(uploadedFile.getFilePath());
-        skinCase.setStatus(CaseStatus.PENDING);
+        if (skinCase.getAssignedDoctor() != null) {
+            skinCase.setStatus(CaseStatus.UNDER_REVIEW);
+        } else {
+            skinCase.setStatus(CaseStatus.PENDING);
+        }
         caseRepository.save(skinCase);
 
         eventPublisher.publishEvent(new CaseCreatedEvent(this, caseId, skinCase.getImageUrl()));

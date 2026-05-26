@@ -1,5 +1,6 @@
 package com.Backend.SkinSight.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,6 +20,7 @@ public class NotificationResponseDto {
 
     private String message;
 
+    @JsonProperty("isRead")
     private boolean isRead;
 
     private Long relatedCaseId;

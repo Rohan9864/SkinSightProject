@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PlusIcon } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
 import DataTable from '../../components/common/DataTable';
@@ -13,6 +14,7 @@ export default function ManageUsersPage() {
   const [activeTab, setActiveTab] = useState('patients');
   const [showCreateDoctor, setShowCreateDoctor] = useState(false);
   const [creatingDoctor, setCreatingDoctor] = useState(false);
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -122,6 +124,15 @@ export default function ManageUsersPage() {
       key: 'name',
       label: 'Name',
       width: '25%',
+      render: (value, row) => (
+        <button
+          type="button"
+          onClick={() => navigate(`/admin/users/${row.id}`)}
+          className="text-slate-800 font-semibold hover:text-sky-600 transition"
+        >
+          {value}
+        </button>
+      ),
     },
     {
       key: 'email',
@@ -184,6 +195,15 @@ export default function ManageUsersPage() {
       key: 'name',
       label: 'Name',
       width: '18%',
+      render: (value, row) => (
+        <button
+          type="button"
+          onClick={() => navigate(`/admin/users/${row.id}`)}
+          className="text-slate-800 font-semibold hover:text-sky-600 transition"
+        >
+          {value}
+        </button>
+      ),
     },
     {
       key: 'email',
@@ -332,14 +352,21 @@ export default function ManageUsersPage() {
             <label className="block text-sm font-semibold text-slate-700 mb-2">
               Full Name <span className="text-rose-500">*</span>
             </label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleInputChange}
-              placeholder="Dr. Jane Smith"
-              className="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-sky-400 focus:ring-1 focus:ring-sky-400 outline-none transition-all text-sm"
-            />
+            <div className="relative">
+              {/* Fixed Prefix */}
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm">
+                    Dr.
+              </span>
+
+              <input
+                 type="text"
+                 name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                placeholder="Jane Smith"
+                className="w-full pl-12 pr-4 py-2.5 rounded-lg border border-slate-200 focus:border-sky-400 focus:ring-1 focus:ring-sky-400 outline-none transition-all text-sm"
+               />
+            </div>
           </div>
 
           {/* Email */}

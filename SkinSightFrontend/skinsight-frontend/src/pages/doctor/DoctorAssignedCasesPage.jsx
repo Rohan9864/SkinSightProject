@@ -60,6 +60,12 @@ export default function DoctorAssignedCasesPage() {
       width: '15%',
     },
     {
+      key: 'status',
+      label: 'Status',
+      width: '14%',
+      render: (value) => <StatusBadge status={value} />,
+    },
+    {
       key: 'diagnosisResult',
       label: 'AI Prediction',
       width: '18%',
@@ -112,10 +118,10 @@ export default function DoctorAssignedCasesPage() {
       render: (value, row) => (
         <button
           onClick={() => navigate(`/doctor/cases/${value}`)}
-          disabled={row.status !== 'UNDER_REVIEW'}
+          disabled={row.status === 'RELEASED'}
           className="px-3 py-1.5 bg-sky-500 text-white rounded-lg text-sm font-semibold hover:bg-sky-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {row.status === 'UNDER_REVIEW' ? 'Review' : 'View'}
+          {row.status === 'RELEASED' ? 'View' : 'Review'}
         </button>
       ),
     },
@@ -130,7 +136,7 @@ export default function DoctorAssignedCasesPage() {
           <h1 className="text-2xl font-bold text-slate-800">Assigned Cases</h1>
         </div>
         <p className="text-sm text-slate-600">
-          {cases.length} case{cases.length !== 1 ? 's' : ''} pending review
+          {cases.length} active assigned case{cases.length !== 1 ? 's' : ''}
         </p>
       </div>
 

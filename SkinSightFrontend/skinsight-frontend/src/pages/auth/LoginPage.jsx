@@ -83,7 +83,7 @@ export default function LoginPage() {
           {/* Feature list */}
           <div className="space-y-3 text-left">
             {[
-              '88% accuracy across 8 disease classes',
+              'High accuracy across 8 disease classes',
               'Grad-CAM heatmaps for explainable AI',
               'Every result reviewed by a real doctor',
               'Downloadable PDF medical reports',

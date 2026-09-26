@@ -65,41 +65,7 @@ export default function DoctorAssignedCasesPage() {
       width: '14%',
       render: (value) => <StatusBadge status={value} />,
     },
-    {
-      key: 'diagnosisResult',
-      label: 'AI Prediction',
-      width: '18%',
-      render: (value) =>
-        value?.predictedClass ? (
-          <span className="text-sm font-semibold text-slate-700">
-            {value.predictedClass}
-          </span>
-        ) : (
-          <span className="text-xs text-slate-500">Pending</span>
-        ),
-    },
-    {
-      key: 'diagnosisResult',
-      label: 'Severity',
-      width: '14%',
-      render: (value) => {
-        if (!value?.severityLevel) return <span className="text-xs text-slate-500">-</span>;
-        const colors = {
-          MILD: 'bg-emerald-100 text-emerald-700',
-          MODERATE: 'bg-amber-100 text-amber-700',
-          SEVERE: 'bg-rose-100 text-rose-700',
-        };
-        return (
-          <span
-            className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
-              colors[value.severityLevel]
-            }`}
-          >
-            {value.severityLevel}
-          </span>
-        );
-      },
-    },
+    
     {
       key: 'submittedAt',
       label: 'Assigned',

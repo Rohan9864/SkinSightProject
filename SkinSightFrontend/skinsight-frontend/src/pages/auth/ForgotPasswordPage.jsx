@@ -70,7 +70,7 @@ export default function ForgotPasswordPage() {
           <div className="space-y-3 text-left">
             {[
               'Secure password reset link',
-              'Valid for 24 hours',
+              'Valid for 1 hour',
               'No password change if token expired',
               'Request a new link if needed',
             ].map((item, i) => (
@@ -219,7 +219,7 @@ export default function ForgotPasswordPage() {
               <div className="space-y-4">
                 <div className="bg-sky-50 rounded-xl p-4 border border-sky-100">
                   <p className="text-sky-700 text-sm">
-                    <span className="font-semibold">Next Step:</span> Click the link in your email to reset your password. The link expires in 24 hours.
+                    <span className="font-semibold">Next Step:</span> Click the link in your email to reset your password. The link expires in 1 hour.
                   </p>
                 </div>
 

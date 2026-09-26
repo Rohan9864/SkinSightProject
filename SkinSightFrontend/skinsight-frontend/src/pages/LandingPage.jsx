@@ -7,7 +7,7 @@ const FEATURES = [
   {
     icon: '🔬',
     title: 'AI-Powered Analysis',
-    desc: 'ConvNeXt-Base deep learning model trained on 25,000+ dermoscopy images achieves 88% accuracy across 8 disease classes.',
+    desc: 'ConvNeXt-Base deep learning model trained on 25,000+ dermoscopy images achieves very high accuracy across 8 disease classes.',
   },
   {
     icon: '🩺',
@@ -194,10 +194,10 @@ export default function LandingPage() {
 
               {/* Quick Stats */}
               <div className="grid grid-cols-2 gap-4 pt-8 border-t border-slate-800">
-                <div className="space-y-1">
+                {/* <div className="space-y-1">
                   <div className="text-3xl font-bold text-cyan-300">88%</div>
                   <div className="text-sm text-slate-400">AI Accuracy</div>
-                </div>
+                </div> */}
                 <div className="space-y-1">
                   <div className="text-3xl font-bold text-cyan-300">25K+</div>
                   <div className="text-sm text-slate-400">Training Images</div>
@@ -393,7 +393,7 @@ export default function LandingPage() {
                   SkinSight is an AI-powered skin disease screening and clinical review system developed as a final year academic project in Computer Science and Medical Informatics.
                 </p>
                 <p className="leading-relaxed">
-                  The system combines ConvNeXt-Base deep learning trained on the ISIC 2019 dermoscopy dataset with a structured clinical review workflow where human doctors validate every AI prediction before it reaches the patient.
+                  The system combines ConvNeXt-Base deep learning trained on the ISIC dermoscopy dataset with a structured clinical review workflow where human doctors validate every AI prediction before it reaches the patient.
                 </p>
                 <p className="leading-relaxed">
                   Our goal is not to replace dermatologists but to assist them with fast, explainable AI screening that helps prioritize cases and surface potential diagnoses for expert review.

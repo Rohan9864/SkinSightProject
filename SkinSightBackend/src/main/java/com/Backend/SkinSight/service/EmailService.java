@@ -17,6 +17,9 @@ public class EmailService {
     @Value("${app.base.url:http://localhost:8080}")
     private String baseUrl;
 
+    @Value("${app.frontend.url:http://localhost:3000}")
+    private String frontendUrl;
+
     public void sendVerificationEmail(String toEmail,
                                       String name,
                                       String token){
@@ -60,7 +63,7 @@ public class EmailService {
                         + "─────────────────────────\n\n"
                         + "Please log in and change your password "
                         + "immediately after your first login.\n\n"
-                        + "Login at: " + baseUrl + "\n\n"
+                        + "Login at: " + frontendUrl + "\n\n"
                         + "If you believe you received this email "
                         + "by mistake, please contact the administrator.\n\n"
                         + "Regards,\n"
@@ -73,7 +76,9 @@ public class EmailService {
     public void sendPasswordResetEmail(String toEmail,
                                        String name,
                                        String token){
-        String resetLink=baseUrl+"/api/auth/reset-password?token=" + token;
+        String resetLink =
+                frontendUrl + "/reset-password?token=" + token;
+
 
         SimpleMailMessage message = new SimpleMailMessage();
 
@@ -100,7 +105,7 @@ public class EmailService {
     public void sendCaseAssignmentEmail(String toEmail,
                                         String name,
                                         Long caseId){
-        String loginLink = baseUrl + "/doctor";
+        String loginLink = frontendUrl + "/doctor";
 
         SimpleMailMessage message = new SimpleMailMessage();
 
@@ -122,7 +127,7 @@ public class EmailService {
     public void sendResultReadyEmail(String toEmail,
                                      String name,
                                      Long caseId){
-        String resultLink = baseUrl
+        String resultLink = frontendUrl
                 + "/api/cases/" + caseId;
 
         SimpleMailMessage message = new SimpleMailMessage();
@@ -154,7 +159,7 @@ public class EmailService {
                                       Long caseId,
                                       String doctorNote){
 
-        String uploadLink=baseUrl + "/api/cases";
+        String uploadLink=frontendUrl + "/api/cases";
 
         SimpleMailMessage message = new SimpleMailMessage();
 

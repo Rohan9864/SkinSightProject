@@ -34,26 +34,49 @@ public class PasswordResetTokenServiceImpl implements PasswordResetTokenService{
     @Override
     public void createTokenAndSendMail(String email) {
 
-        User user=userRepository.findByEmail(email).orElseThrow(()->
-                new ResourceNotFoundException("No account found with "
-                        + "email: " + email));
-        tokenRepository.findByUserId(user.getId()).ifPresent(existing->{
-            tokenRepository.delete(existing);
-        });
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "No account found with email: " + email
+                        ));
+
+        LocalDateTime now = LocalDateTime.now();
+
+        boolean activeToken =
+                tokenRepository.existsByUserIdAndExpiresAtAfterAndIsUsedFalse(
+                        user.getId(),
+                        now
+                );
+
+        if (activeToken) {
+            throw new BadRequestException(
+                    "A password reset link has already been sent. "
+                            + "Please check your email."
+            );
+        }
+
+        PasswordResetToken tokenEntity =
+                tokenRepository.findByUserId(user.getId())
+                        .orElseGet(() ->
+                                PasswordResetToken.builder()
+                                        .user(user)
+                                        .build()
+                        );
 
         String tokenValue = UUID.randomUUID().toString();
-        PasswordResetToken tokenEntity = PasswordResetToken.builder()
-                .user(user)
-                .token(tokenValue)
-                .expiresAt(LocalDateTime.now().plusHours(1))
-                .isUsed(false)
-                .build();
+
+        tokenEntity.setToken(tokenValue);
+        tokenEntity.setExpiresAt(now.plusHours(1));
+        tokenEntity.setUsed(false);
 
         tokenRepository.save(tokenEntity);
+
         emailService.sendPasswordResetEmail(
                 user.getEmail(),
                 user.getName(),
-                tokenValue);
+                tokenValue
+        );
+
 
     }
 
